@@ -1,39 +1,76 @@
 import { useRouter } from "expo-router";
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import * as Google from 'expo-auth-session/providers/google';
+import { socialAuthService, googleConfig } from "../../services/socialAuth";
+import { useAuth } from "../../context/AuthContext";
 
 export default function LoginScreen() {
-  const router = useRouter(); // Use the router hook
+  const router = useRouter();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  const [_, __, promptAsync] = Google.useAuthRequest(googleConfig);
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    try {
+      setLoading(true);
+      const response = provider === 'google'
+        ? await socialAuthService.handleGoogleLogin(promptAsync)
+        : await socialAuthService.handleFacebookLogin();
+
+      await login(response.token, response.user_id);
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <Text style={styles.headerText}>Let's get started saving food!</Text>
 
-      {/* Image */}
       <Image
-        source={{ uri: "https://example.com/image.png" }} // Replace with your image URL or use a local asset
+        source={{ uri: "https://example.com/image.png" }}
         style={styles.image}
       />
 
-      {/* Buttons */}
-      <TouchableOpacity style={[styles.button, styles.appleButton]}>
-        <Text style={styles.buttonText}>Continue with Apple</Text>
+      <TouchableOpacity 
+        style={[styles.button, styles.googleButton]}
+        onPress={() => handleSocialLogin('google')}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>Continue with Google</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, styles.facebookButton]}>
+
+      <TouchableOpacity 
+        style={[styles.button, styles.facebookButton]}
+        onPress={() => handleSocialLogin('facebook')}
+        disabled={loading}
+      >
         <Text style={styles.buttonText}>Continue with Facebook</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={[styles.button, styles.emailButton]}
-        onPress={() => router.push("/EmailScreen")} // Navigate to the EmailScreen
+        onPress={() => router.push("/EmailScreen")}
+        disabled={loading}
       >
         <Text style={styles.buttonText}>Continue with email</Text>
       </TouchableOpacity>
-      <Text style={styles.otherText}>Other</Text>
+
+      <TouchableOpacity
+        style={[styles.button, styles.loginButton]}
+        onPress={() => router.push("/LoginScreen")}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>Login with email</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -62,8 +99,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 8,
   },
-  appleButton: {
-    backgroundColor: "#000000",
+  googleButton: {
+    backgroundColor: "#DB4437",
   },
   facebookButton: {
     backgroundColor: "#1877F2",
@@ -76,9 +113,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
-  otherText: {
-    color: "#7D7D7D",
-    fontSize: 14,
-    marginTop: 10,
+  loginButton: {
+    backgroundColor: "#036B52",
   },
 });
+

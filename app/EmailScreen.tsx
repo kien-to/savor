@@ -10,6 +10,13 @@ const EmailScreen = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
+
       <Text style={styles.header}>Đăng kí tài khoản</Text>
       <Text style={styles.label}>Email</Text>
       <TextInput
@@ -70,6 +77,16 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    padding: 10,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: '#000',
   },
 });
 

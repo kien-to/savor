@@ -7,8 +7,13 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
+import { useAuth } from '../context/AuthContext';
+import { useRouter } from "expo-router";
 
-const ManageAccountScreen = ({ navigation }) => {
+const ManageAccountScreen = ({ navigation }: { navigation: any }) => {
+  const router = useRouter();
+  const { logout } = useAuth();
+
   // Menu Data
   const menuOptions = [
     { id: '1', label: 'Account details', icon: '👤', screen: 'AccountDetails' },
@@ -24,10 +29,16 @@ const ManageAccountScreen = ({ navigation }) => {
     { id: '11', label: 'Legal', icon: '⚖️', screen: 'Legal' },
   ];
 
-  const handleLogOut = () => {
+  const handleLogOut = async () => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Log Out', onPress: () => console.log('Logged Out') },
+      { 
+        text: 'Log Out', 
+        onPress: async () => {
+          await logout();
+          router.replace('/(tabs)/login');
+        } 
+      },
     ]);
   };
 

@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import Swiper from 'react-native-swiper';
 
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 
-const OnboardingScreens = ({ navigation }: { navigation: NavigationProp<any> }) => {
+const OnboardingScreens = () => {
+  const navigation = useNavigation();
+
   const onboardingData = [
     {
       image: require('../assets/images/icon.png'), // Replace with your image
