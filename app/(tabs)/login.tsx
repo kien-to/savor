@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Platform } from "react-native";
 import * as Google from 'expo-auth-session/providers/google';
 import { socialAuthService, googleConfig } from "../../services/socialAuth";
 import { useAuth } from "../../context/AuthContext";
@@ -10,17 +10,44 @@ export default function LoginScreen() {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const [_, __, promptAsync] = Google.useAuthRequest(googleConfig);
+  const [_, response, promptAsync] = Google.useAuthRequest({
+    ...googleConfig,
+    redirectUri: Platform.select({
+      ios: 'com.your.app.bundle.id:/oauth2redirect',  // Replace with your app's bundle ID
+      android: 'com.your.app.bundle.id:/oauth2redirect', // Replace with your app's bundle ID
+      default: 'your-scheme://oauth2redirect',
+    }),
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      handleGoogleAuthResponse(response);
+    }
+  }, [response]);
+
+  const handleGoogleAuthResponse = async (response: any) => {
+    try {
+      setLoading(true);
+      const result = await socialAuthService.handleGoogleLogin(response);
+      await login(result.token, result.user_id);
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     try {
       setLoading(true);
-      const response = provider === 'google'
-        ? await socialAuthService.handleGoogleLogin(promptAsync)
-        : await socialAuthService.handleFacebookLogin();
-
-      await login(response.token, response.user_id);
-      router.replace('/(tabs)');
+      if (provider === 'google') {
+        await promptAsync();
+      } else {
+        const response = await socialAuthService.handleFacebookLogin();
+        await login(response.token, response.user_id);
+        router.replace('/(tabs)');
+      }
     } catch (error: any) {
       Alert.alert('Login Failed', error.message);
     } finally {

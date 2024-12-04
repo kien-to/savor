@@ -1,65 +1,111 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image } from 'react-native';
+import { useEffect, useState } from 'react';
+import { homeService } from '../../services/home';
+import * as Location from 'expo-location';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+
+interface HomePageData {
+  emailVerified: boolean;
+  userLocation: {
+    city: string;
+    distance: number;
+  };
+  recommendedStores: Store[];
+  pickUpTomorrow: Store[];
+}
+
+interface Store {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  pickUpTime: string;
+  distance: string;
+  price: number;
+}
 
 const HomeScreen = () => {
   const [searchText, setSearchText] = useState('');
+  const [homeData, setHomeData] = useState<HomePageData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Sample data for items
-  const recommendedItems = [
-    {
-      id: '1',
-      title: 'Homeskillet Redwood City',
-      description: 'Surprise Bag',
-      pickUpTime: 'Pick up tomorrow 1:00 AM - 5:00 AM',
-      distance: '3.8 mi',
-      price: '$5.99',
-      image: require('../../assets/images/icon.png'), // Replace with your asset
-      rating: 4.6,
-    },
-  ];
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        setLoading(true);
+        // Get user's location
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setError('Location permission denied');
+          return;
+        }
 
-  const pickUpTomorrowItems = [
-    {
-      id: '2',
-      title: 'Philz Coffee - Forest Ave',
-      description: 'Surprise Bag',
-      pickUpTime: 'Pick up tomorrow 7:00 AM - 8:00 AM',
-      distance: '1.1 mi',
-      price: '$3.99',
-      image: require('../../assets/images/icon.png'), // Replace with your asset
-      rating: 4.3,
-    },
-  ];
+        const location = await Location.getCurrentPositionAsync({});
+        const data = await homeService.getHomePageData(
+          location.coords.latitude,
+          location.coords.longitude
+        );
+        setHomeData(data);
+      } catch (err) {
+        setError('Failed to fetch home data');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const renderItem = (item) => (
+    fetchHomeData();
+  }, []);
+
+  const renderItem = (item: Store) => (
     <TouchableOpacity style={styles.card}>
-      <Image source={item.image} style={styles.cardImage} />
+      <Image 
+        source={{ uri: item.imageUrl }} 
+        style={styles.cardImage} 
+      />
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.title}</Text>
         <Text style={styles.cardDescription}>{item.description}</Text>
         <Text style={styles.cardPickupTime}>{item.pickUpTime}</Text>
         <View style={styles.cardFooter}>
           <Text style={styles.cardDistance}>{item.distance}</Text>
-          <Text style={styles.cardPrice}>{item.price}</Text>
+          <Text style={styles.cardPrice}>${item.price.toFixed(2)}</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#036B52" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.verifyEmail}>Verify your email address</Text>
+        {!homeData?.emailVerified && (
+          <Text style={styles.verifyEmail}>Verify your email address</Text>
+        )}
       </View>
 
-      {/* Location Section */}
       <View style={styles.locationContainer}>
-        <Text style={styles.locationText}>📍 Menlo Park</Text>
-        <Text style={styles.distanceText}>within 6 mi</Text>
+        <Text style={styles.locationText}>📍 {homeData?.userLocation.city}</Text>
+        <Text style={styles.distanceText}>
+          within {homeData?.userLocation.distance} mi
+        </Text>
       </View>
 
-      {/* Search Bar */}
       <TextInput
         style={styles.searchInput}
         placeholder="Search"
@@ -67,7 +113,6 @@ const HomeScreen = () => {
         onChangeText={setSearchText}
       />
 
-      {/* Recommended for You Section */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Recommended for you</Text>
         <TouchableOpacity>
@@ -76,14 +121,13 @@ const HomeScreen = () => {
       </View>
       <FlatList
         horizontal
-        data={recommendedItems}
+        data={homeData?.recommendedStores}
         renderItem={({ item }) => renderItem(item)}
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
         style={styles.list}
       />
 
-      {/* Pick Up Tomorrow Section */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Pick up tomorrow</Text>
         <TouchableOpacity>
@@ -92,7 +136,7 @@ const HomeScreen = () => {
       </View>
       <FlatList
         horizontal
-        data={pickUpTomorrowItems}
+        data={homeData?.pickUpTomorrow}
         renderItem={({ item }) => renderItem(item)}
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
@@ -207,6 +251,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#036B52',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    padding: 16,
   },
 });
 
