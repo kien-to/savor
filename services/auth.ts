@@ -9,8 +9,13 @@ interface LoginCredentials {
 }
 
 interface SocialLoginInput {
-  provider: 'google' | 'facebook';
+  provider: 'google' | 'facebook' | 'phone';
   id_token: string;
+}
+
+interface SignUpCredentials {
+  email: string;
+  password: string;
 }
 
 const API_URL = 'http://localhost:8080'; // Change this to your server URL
@@ -36,7 +41,28 @@ export const authService = {
       throw error;
     }
   },
-  
+
+  async signUp(credentials: SignUpCredentials): Promise<LoginResponse> {
+    try {
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Registration failed');
+      }
+
+      return response.json();
+    } catch (error) {
+      throw error;
+    }
+  },
+
   async socialLogin(input: SocialLoginInput): Promise<LoginResponse> {
     try {
       const endpoint = input.provider === 'google' ? '/auth/google' : '/auth/facebook';

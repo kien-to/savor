@@ -60,47 +60,48 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Let's get started saving food!</Text>
+      <Text style={styles.headerText}>Cùng chung tay cứu lấy đồ ăn thừa</Text>
 
       <Image
         source={{ uri: "https://example.com/image.png" }}
         style={styles.image}
       />
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.button, styles.googleButton]}
         onPress={() => handleSocialLogin('google')}
         disabled={loading}
       >
-        <Text style={styles.buttonText}>Continue with Google</Text>
+        <Text style={styles.buttonText}>Tiếp tục với Google</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      {/* <TouchableOpacity
         style={[styles.button, styles.facebookButton]}
         onPress={() => handleSocialLogin('facebook')}
         disabled={loading}
       >
         <Text style={styles.buttonText}>Continue with Facebook</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+
+      {/* <TouchableOpacity
+        style={[styles.button, styles.phoneButton]}
+        onPress={() => router.push("/(auth)/phone-login")}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>Continue with Phone</Text>
+      </TouchableOpacity> */}
 
       <TouchableOpacity
         style={[styles.button, styles.emailButton]}
-        onPress={() => router.push("/EmailScreen")}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>Continue with email</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, styles.loginButton]}
         onPress={() => router.push("/LoginScreen")}
         disabled={loading}
       >
-        <Text style={styles.buttonText}>Login with email</Text>
+        <Text style={styles.buttonText}>Tiếp tục với email</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
   image: {
     width: 150,
     height: 150,
-    marginBottom: 30,
+    marginBottom: 10,
     resizeMode: "contain",
   },
   button: {
@@ -146,5 +147,7 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: "#036B52",
   },
+  phoneButton: {
+    backgroundColor: "#34B7F1",
+  },
 });
-

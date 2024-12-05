@@ -24,22 +24,29 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Login</Text>
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.header}>Đăng nhập</Text>
       
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter your email"
+        placeholder="Nhập email"
         keyboardType="email-address"
         autoCapitalize="none"
         onChangeText={setEmail}
         value={email}
       />
 
-      <Text style={styles.label}>Password</Text>
+      <Text style={styles.label}>Mật khẩu</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter your password"
+        placeholder="Nhập mật khẩu"
         secureTextEntry
         onChangeText={setPassword}
         value={password}
@@ -51,7 +58,7 @@ export default function LoginScreen() {
         onPress={handleLogin}
       >
         <Text style={styles.buttonText}>
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Đăng nhập...' : 'Đăng nhập'}
         </Text>
       </TouchableOpacity>
 
@@ -59,7 +66,7 @@ export default function LoginScreen() {
         style={styles.signupLink}
         onPress={() => router.push('/EmailScreen')}
       >
-        <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+        <Text style={styles.signupText}>Không có tài khoản? Đăng ký</Text>
       </TouchableOpacity>
     </View>
   );
@@ -72,10 +79,22 @@ const styles = StyleSheet.create({
     paddingVertical: 70,
     backgroundColor: '#FFF',
   },
+  backButton: {
+    position: 'absolute',
+    top: 70,
+    left: 16,
+    zIndex: 1,
+    padding: 2,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: '#333',
+  },
   header: {
     fontSize: 24,
     fontWeight: '600',
     textAlign: 'center',
+    marginTop: 0,
     marginBottom: 32,
   },
   label: {

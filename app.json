@@ -40,6 +40,11 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "facebookScheme": "fb1224771151917446",
+    "facebookAppId": "1224771151917446",
+    "facebookDisplayName": "Savor",
+    "facebookAutoLogAppEventsEnabled": false,
+    "facebookAdvertiserIDCollectionEnabled": false
   }
 }

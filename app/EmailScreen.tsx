@@ -1,12 +1,40 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { authService } from '../services/auth';
 
 const EmailScreen = () => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
-  const isEmailValid = email.includes('@');
+  const isEmailValid = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSignUp = async () => {
+    if (!isEmailValid(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Invalid Password', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await authService.signUp({ email, password });
+      navigation.navigate('CountryScreen');
+    } catch (error: any) {
+      Alert.alert('Registration Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -18,21 +46,37 @@ const EmailScreen = () => {
       </TouchableOpacity>
 
       <Text style={styles.header}>Đăng kí tài khoản</Text>
+      
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
-        placeholder="What's your email"
+        placeholder="Nhập email"
         keyboardType="email-address"
         autoCapitalize="none"
         onChangeText={setEmail}
         value={email}
       />
+
+      <Text style={styles.label}>Mật khẩu</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nhập mật khẩu"
+        secureTextEntry
+        onChangeText={setPassword}
+        value={password}
+      />
+
       <TouchableOpacity
-        style={[styles.button, isEmailValid ? styles.buttonActive : styles.buttonInactive]}
-        disabled={!isEmailValid}
-        onPress={() => navigation.navigate('CountryScreen')}
+        style={[
+          styles.button, 
+          loading ? styles.buttonInactive : (isEmailValid(email) && password.length >= 6 ? styles.buttonActive : styles.buttonInactive)
+        ]}
+        disabled={loading || !isEmailValid(email) || password.length < 6}
+        onPress={handleSignUp}
       >
-        <Text style={styles.buttonText}>Tiếp tục</Text>
+        <Text style={styles.buttonText}>
+          {loading ? 'Đang đăng ký...' : 'Tiếp tục'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -80,13 +124,14 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 60,
+    top: 70,
     left: 16,
-    padding: 10,
+    zIndex: 1,
+    padding: 2,
   },
   backButtonText: {
     fontSize: 24,
-    color: '#000',
+    color: '#333',
   },
 });
 

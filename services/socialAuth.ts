@@ -47,7 +47,7 @@ export const socialAuthService = {
     try {
       const result = await WebBrowser.openAuthSessionAsync(
         `https://www.facebook.com/v12.0/dialog/oauth?` +
-        `client_id=${FACEBOOK_APP_ID}&` +
+        `client_id=${1224771151917446}&` +
         `response_type=token&` +
         `redirect_uri=${encodeURIComponent(googleConfig.redirectUri)}`,
         googleConfig.redirectUri

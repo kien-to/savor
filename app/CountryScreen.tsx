@@ -51,10 +51,10 @@ const CountryScreen = () => {
         disabled={!isChecked}
         onPress={() => {
           navigation.navigate('OnboardingScreen');
-          alert('Signed up!')
+          alert('Đăng ký thành công!')
         }}
       >
-        <Text style={styles.buttonText}>Sign me up</Text>
+        <Text style={styles.buttonText}>Đăng ký</Text>
       </TouchableOpacity>
     </View>
   );
