@@ -10,7 +10,7 @@ interface LoginCredentials {
 
 interface SocialLoginInput {
   provider: 'google' | 'facebook';
-  token: string;
+  id_token: string;
 }
 
 const API_URL = 'http://localhost:8080'; // Change this to your server URL
@@ -40,16 +40,24 @@ export const authService = {
   async socialLogin(input: SocialLoginInput): Promise<LoginResponse> {
     try {
       const endpoint = input.provider === 'google' ? '/auth/google' : '/auth/facebook';
+      console.log('Making request to:', `${API_URL}${endpoint}`);
+      console.log('Request body:', JSON.stringify({
+        id_token: input.id_token
+      }, null, 2));
+      
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token: input.token }),
+        body: JSON.stringify({
+          id_token: input.id_token
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.log('Server error response:', error);
         throw new Error(error.error || `${input.provider} login failed`);
       }
 

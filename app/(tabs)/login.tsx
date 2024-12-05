@@ -13,7 +13,7 @@ export default function LoginScreen() {
   const [_, response, promptAsync] = Google.useAuthRequest({
     ...googleConfig,
     redirectUri: Platform.select({
-      ios: 'com.your.app.bundle.id:/oauth2redirect',  // Replace with your app's bundle ID
+      ios: "com.googleusercontent.apps.956015678432-mcgun19fkpv3jk3pu10lbhe40oqgvt7d:/oauth2redirect",
       android: 'com.your.app.bundle.id:/oauth2redirect', // Replace with your app's bundle ID
       default: 'your-scheme://oauth2redirect',
     }),
@@ -28,7 +28,10 @@ export default function LoginScreen() {
   const handleGoogleAuthResponse = async (response: any) => {
     try {
       setLoading(true);
-      const result = await socialAuthService.handleGoogleLogin(response);
+      const { idToken } = response.authentication;
+      console.log('Google ID Token:', idToken);
+      if (!idToken) throw new Error('No ID token found');
+      const result = await socialAuthService.handleGoogleLogin(idToken);
       await login(result.token, result.user_id);
       router.replace('/(tabs)');
     } catch (error: any) {

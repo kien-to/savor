@@ -2,6 +2,8 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
 import { authService } from './auth';
+import { getAuth, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import app from '../config/firebase';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,24 +20,25 @@ export const googleConfig = {
   iosClientId: GOOGLE_CLIENT_ID.ios,
   webClientId: GOOGLE_CLIENT_ID.web,
   redirectUri: makeRedirectUri({
-    scheme: 'savor',
+    scheme: 'com.googleusercontent.apps.956015678432-mcgun19fkpv3jk3pu10lbhe40oqgvt7d:/oauth2redirect',
     path: 'auth'
   })
 };
 
 export const socialAuthService = {
-  async handleGoogleLogin(promptAsync: () => Promise<any>) {
+  async handleGoogleLogin(idToken: string) {
     try {
-      const result = await promptAsync();
-      if (result?.type === 'success') {
-        const { authentication } = result;
-        return await authService.socialLogin({
-          provider: 'google',
-          token: authentication.accessToken
-        });
-      }
-      throw new Error('Google login failed');
+      const auth = getAuth(app);
+      const credential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, credential);
+      const firebaseToken = await userCredential.user.getIdToken();
+      
+      return await authService.socialLogin({
+        provider: 'google',
+        id_token: firebaseToken
+      });
     } catch (error) {
+      console.error('Firebase auth error:', error);
       throw error;
     }
   },
@@ -54,7 +57,7 @@ export const socialAuthService = {
         const token = result.url.split('access_token=')[1].split('&')[0];
         return await authService.socialLogin({
           provider: 'facebook',
-          token
+          id_token: token
         });
       }
       throw new Error('Facebook login cancelled');
