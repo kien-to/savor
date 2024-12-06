@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { homeService } from '../../services/home';
 import * as Location from 'expo-location';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 
 interface HomePageData {
   emailVerified: boolean;
@@ -28,33 +28,44 @@ const HomeScreen = () => {
   const [homeData, setHomeData] = useState<HomePageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchHomeData = async () => {
+    try {
+      setLoading(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Location permission denied');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const data = await homeService.getHomePageData(
+        location.coords.latitude,
+        location.coords.longitude
+      );
+      setHomeData(data);
+    } catch (err) {
+      setError('Failed to fetch home data');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchHomeData = async () => {
-      try {
-        setLoading(true);
-        // Get user's location
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setError('Location permission denied');
-          return;
-        }
-
-        const location = await Location.getCurrentPositionAsync({});
-        const data = await homeService.getHomePageData(
-          location.coords.latitude,
-          location.coords.longitude
-        );
-        setHomeData(data);
-      } catch (err) {
-        setError('Failed to fetch home data');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchHomeData();
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchHomeData();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
   const renderItem = (item: Store) => (
@@ -92,57 +103,69 @@ const HomeScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        {!homeData?.emailVerified && (
-          <Text style={styles.verifyEmail}>Verify your email address</Text>
-        )}
-      </View>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#your-primary-color']} // Android
+          tintColor="#your-primary-color"  // iOS
+        />
+      }
+    >
+      <View style={styles.content}>
+        {/* <View style={styles.header}>
+          {!homeData?.emailVerified && (
+            <Text style={styles.verifyEmail}>Verify your email address</Text>
+          )}
+        </View> */}
 
-      <View style={styles.locationContainer}>
-        <Text style={styles.locationText}>📍 {homeData?.userLocation.city}</Text>
-        <Text style={styles.distanceText}>
-          within {homeData?.userLocation.distance} mi
-        </Text>
-      </View>
+        <View style={styles.locationContainer}>
+          <Text style={styles.locationText}>📍 {homeData?.userLocation.city}</Text>
+          <Text style={styles.distanceText}>
+            within {homeData?.userLocation.distance} mi
+          </Text>
+        </View>
 
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search"
-        value={searchText}
-        onChangeText={setSearchText}
-      />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recommended for you</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>See all</Text>
-        </TouchableOpacity>
-      </View>
-      <FlatList
-        horizontal
-        data={homeData?.recommendedStores}
-        renderItem={({ item }) => renderItem(item)}
-        keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-        style={styles.list}
-      />
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recommended for you</Text>
+          <TouchableOpacity>
+            <Text style={styles.seeAllText}>See all</Text>
+          </TouchableOpacity>
+        </View>
+        <FlatList    
+          horizontal
+          data={homeData?.recommendedStores}
+          renderItem={({ item }) => renderItem(item)}
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          style={styles.list}
+        />
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Pick up tomorrow</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>See all</Text>
-        </TouchableOpacity>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Pick up tomorrow</Text>
+          <TouchableOpacity>
+            <Text style={styles.seeAllText}>See all</Text>
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          horizontal
+          data={homeData?.pickUpTomorrow}
+          renderItem={({ item }) => renderItem(item)}
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          style={styles.list}
+        />
       </View>
-      <FlatList
-        horizontal
-        data={homeData?.pickUpTomorrow}
-        renderItem={({ item }) => renderItem(item)}
-        keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-        style={styles.list}
-      />
-    </View>
+    </ScrollView>
   );
 };
 
@@ -150,6 +173,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF',
+  },
+  content: {
     padding: 20,
   },
   header: {
@@ -165,6 +190,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   locationContainer: {
+    marginTop: 40,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,

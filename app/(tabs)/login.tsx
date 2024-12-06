@@ -96,7 +96,7 @@ export default function LoginScreen() {
         onPress={() => router.push("/LoginScreen")}
         disabled={loading}
       >
-        <Text style={styles.buttonText}>Tiếp tục với email</Text>
+        <Text style={styles.buttonText}>Tiếp tục với Email</Text>
       </TouchableOpacity>
     </View>
   );
