@@ -60,7 +60,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Cùng chung tay cứu lấy đồ ăn thừa</Text>
+      <Text style={styles.headerText}>Chung tay cứu lấy đồ ăn</Text>
 
       <Image
         source={{ uri: "https://example.com/image.png" }}

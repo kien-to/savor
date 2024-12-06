@@ -58,6 +58,12 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="+not-found" />
+          <Stack.Screen
+            name="ForgotPasswordScreen"
+            options={{
+              headerShown: false,
+            }}
+          />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

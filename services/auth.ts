@@ -18,6 +18,10 @@ interface SignUpCredentials {
   password: string;
 }
 
+interface ForgotPasswordInput {
+  email: string;
+}
+
 const API_URL = 'http://localhost:8080'; // Change this to your server URL
 
 export const authService = {
@@ -91,5 +95,24 @@ export const authService = {
     } catch (error) {
       throw error;
     }
-  }
+  },
+
+  async forgotPassword(input: ForgotPasswordInput): Promise<void> {
+    try {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send reset password email');
+      }
+    } catch (error) {
+      throw error;
+    }
+  },
 }; 

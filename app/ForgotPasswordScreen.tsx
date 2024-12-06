@@ -3,22 +3,32 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import { useRouter } from 'expo-router';
 import { authService } from '../services/auth';
 
-export default function LoginScreen() {
+export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async () => {
+  const isEmailValid = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!isEmailValid(email)) {
+      Alert.alert('Email không hợp lệ', 'Vui lòng nhập email hợp lệ');
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await authService.login({ email, password });
-      // Store token in secure storage
-      router.replace('/(tabs)');
+      await authService.forgotPassword({ email });
+      Alert.alert(
+        'Email đã gửi',
+        'Vui lòng kiểm tra email của bạn để đặt lại mật khẩu',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
     } catch (error: any) {
-      Alert.alert('Đăng nhập lỗi', error.message === 'Login failed' ? 'Đăng nhập thất bại' : 
-                                  error.message === 'Invalid credentials' ? 'Thông tin đăng nhập không hợp lệ' :
-                                  'Có lỗi xảy ra, vui lòng thử lại sau');
+      Alert.alert('Lỗi', error.message);
     } finally {
       setLoading(false);
     }
@@ -33,8 +43,12 @@ export default function LoginScreen() {
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
 
-      <Text style={styles.header}>Đăng nhập</Text>
+      <Text style={styles.header}>Quên mật khẩu</Text>
       
+      <Text style={styles.description}>
+        Nhập email của bạn và chúng tôi sẽ gửi link đặt lại mật khẩu
+      </Text>
+
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
@@ -45,37 +59,17 @@ export default function LoginScreen() {
         value={email}
       />
 
-      <Text style={styles.label}>Mật khẩu</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập mật khẩu"
-        secureTextEntry
-        onChangeText={setPassword}
-        value={password}
-      />
-
       <TouchableOpacity
-        style={[styles.button, loading ? styles.buttonInactive : styles.buttonActive]}
-        disabled={loading}
-        onPress={handleLogin}
+        style={[
+          styles.button, 
+          loading || !isEmailValid(email) ? styles.buttonInactive : styles.buttonActive
+        ]}
+        disabled={loading || !isEmailValid(email)}
+        onPress={handleForgotPassword}
       >
         <Text style={styles.buttonText}>
-          {loading ? 'Đăng nhập...' : 'Đăng nhập'}
+          {loading ? 'Đang gửi...' : 'Gửi link đặt lại mật khẩu'}
         </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={styles.forgotPasswordLink}
-        onPress={() => router.push('/ForgotPasswordScreen')}
-      >
-        <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={styles.signupLink}
-        onPress={() => router.push('/EmailScreen')}
-      >
-        <Text style={styles.signupText}>Không có tài khoản? Đăng ký</Text>
       </TouchableOpacity>
     </View>
   );
@@ -104,7 +98,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginTop: 0,
+    marginBottom: 16,
+  },
+  description: {
+    textAlign: 'center',
+    color: '#666',
     marginBottom: 32,
+    paddingHorizontal: 20,
   },
   label: {
     fontSize: 16,
@@ -132,22 +132,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-  },
-  signupLink: {
-    marginTop: 24,
-    alignItems: 'center',
-  },
-  signupText: {
-    color: '#036B52',
-    fontSize: 16,
-  },
-  forgotPasswordLink: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  forgotPasswordText: {
-    color: '#036B52',
     fontSize: 16,
   },
 }); 

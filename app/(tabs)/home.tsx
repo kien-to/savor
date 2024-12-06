@@ -150,10 +150,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF',
-    padding: 16,
+    padding: 20,
   },
   header: {
     backgroundColor: '#036B52',
+    marginTop: 40,
     padding: 16,
     borderRadius: 8,
     marginBottom: 16,
