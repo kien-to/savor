@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { homeService } from '../../services/home';
 import * as Location from 'expo-location';
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
 
 interface HomePageData {
   emailVerified: boolean;
@@ -24,6 +25,7 @@ interface Store {
 }
 
 const HomeScreen = () => {
+  const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [homeData, setHomeData] = useState<HomePageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +71,13 @@ const HomeScreen = () => {
   }, []);
 
   const renderItem = (item: Store) => (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => router.push({
+        pathname: '/StoreScreen',
+        params: { storeId: item.id }
+      })}
+    >
       <Image 
         source={{ uri: item.imageUrl }} 
         style={styles.cardImage} 

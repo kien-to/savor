@@ -6,9 +6,38 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { API_URL } from '../config';
 
 const StoreDetailScreen = () => {
+  const { storeId } = useLocalSearchParams();
+  const router = useRouter();
+  const [storeData, setStoreData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStoreData = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/stores/${storeId}`);
+        const data = await response.json();
+        setStoreData(data);
+      } catch (error) {
+        console.error('Error fetching store data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStoreData();
+  }, [storeId]);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#036B52" />;
+  }
+
   return (
     <View style={styles.container}>
       
@@ -20,22 +49,20 @@ const StoreDetailScreen = () => {
       />
 
       {/* Top Overlay Section */}
-      <View style={styles.overlayContainer}>
-        {/* Left Overlay */}
+      {/* <View style={styles.overlayContainer}>
         <TouchableOpacity style={styles.backButton}>
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity>
 
-        {/* Right Overlay Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>⇪</Text> {/* Replace with share icon */}
+            <Text style={styles.actionIcon}>⇪</Text> 
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>♡</Text> {/* Replace with favorite icon */}
+            <Text style={styles.actionIcon}>♡</Text> 
           </TouchableOpacity>
         </View>
-      </View>
+      </View> */}
 
       {/* Store Information */}
       <View style={styles.avaContainer}>
