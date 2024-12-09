@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { authService } from '../services/auth';
+import * as SecureStore from 'expo-secure-store';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -13,7 +14,7 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const response = await authService.login({ email, password });
-      // Store token in secure storage
+      await SecureStore.setItemAsync('authToken', response.token);
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Đăng nhập lỗi', error.message === 'Login failed' ? 'Đăng nhập thất bại' : 

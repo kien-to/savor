@@ -1,3 +1,5 @@
+import * as SecureStore from 'expo-secure-store';
+
 interface LoginResponse {
   user_id: string;
   token: string;
@@ -40,7 +42,9 @@ export const authService = {
         throw new Error(error.error || 'Login failed');
       }
 
-      return response.json();
+      const data = await response.json();
+      await SecureStore.setItemAsync('authToken', data.token);
+      return data;
     } catch (error) {
       throw error;
     }
@@ -61,7 +65,9 @@ export const authService = {
         throw new Error(error.error || 'Registration failed');
       }
 
-      return response.json();
+      const data = await response.json();
+      await SecureStore.setItemAsync('authToken', data.token);
+      return data;
     } catch (error) {
       throw error;
     }
@@ -91,7 +97,9 @@ export const authService = {
         throw new Error(error.error || `${input.provider} login failed`);
       }
 
-      return response.json();
+      const data = await response.json();
+      await SecureStore.setItemAsync('authToken', data.token);
+      return data;
     } catch (error) {
       throw error;
     }

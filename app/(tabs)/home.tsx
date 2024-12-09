@@ -3,6 +3,7 @@ import { homeService } from '../../services/home';
 import * as Location from 'expo-location';
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
+import { storeService } from '../../services/store';
 
 interface HomePageData {
   emailVerified: boolean;
@@ -22,6 +23,7 @@ interface Store {
   pickUpTime: string;
   distance: string;
   price: number;
+  isSaved?: boolean;
 }
 
 const HomeScreen = () => {
@@ -70,6 +72,33 @@ const HomeScreen = () => {
     }
   }, []);
 
+  const toggleSave = async (storeId: string) => {
+    try {
+      const newSavedState = await storeService.toggleSave(storeId);
+      
+      // Update the stores in state
+      setHomeData(prevData => {
+        if (!prevData) return prevData;
+
+        const updateStores = (stores: Store[]) =>
+          stores.map(store =>
+            store.id === storeId
+              ? { ...store, isSaved: newSavedState }
+              : store
+          );
+
+        return {
+          ...prevData,
+          recommendedStores: updateStores(prevData.recommendedStores),
+          pickUpTomorrow: updateStores(prevData.pickUpTomorrow),
+        };
+      });
+    } catch (error) {
+      console.error('Failed to toggle save:', error);
+      // Optionally show an error message to the user
+    }
+  };
+
   const renderItem = (item: Store) => (
     <TouchableOpacity 
       style={styles.card}
@@ -78,10 +107,23 @@ const HomeScreen = () => {
         params: { storeId: item.id }
       })}
     >
-      <Image 
-        source={{ uri: item.imageUrl }} 
-        style={styles.cardImage} 
-      />
+      <View style={styles.cardHeader}>
+        <Image 
+          source={{ uri: item.imageUrl }} 
+          style={styles.cardImage} 
+        />
+        <TouchableOpacity 
+          style={styles.saveButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            toggleSave(item.id);
+          }}
+        >
+          <Text style={styles.saveIcon}>
+            {item.isSaved ? '❤️' : '🤍'}
+          </Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.title}</Text>
         <Text style={styles.cardDescription}>{item.description}</Text>
@@ -297,6 +339,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     padding: 16,
+  },
+  cardHeader: {
+    position: 'relative',
+  },
+  saveButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveIcon: {
+    fontSize: 16,
   },
 });
 

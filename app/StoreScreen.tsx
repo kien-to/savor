@@ -9,75 +9,113 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { API_URL } from '../config';
+import { useEffect, useState, useCallback } from 'react';
+import { getStore } from '../services/api';
+import { storeService } from '../services/store';
+
+// Add interface for store data
+interface StoreData {
+  id: string;
+  title: string;
+  description: string;
+  pickUpTime: string;
+  price: number;
+  originalPrice: number;
+  backgroundUrl: string;
+  avatarUrl: string;
+  rating: number;
+  reviews: number;
+  address: string;
+  itemsLeft: number;
+  highlights: string[];
+  isSaved: boolean;
+}
 
 const StoreDetailScreen = () => {
   const { storeId } = useLocalSearchParams();
   const router = useRouter();
-  const [storeData, setStoreData] = useState(null);
+  const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    const fetchStoreData = async () => {
+    const fetchStore = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/stores/${storeId}`);
-        const data = await response.json();
+        setLoading(true);
+        setError(null);
+        const data = await getStore(Number(storeId));
         setStoreData(data);
+        setIsSaved(data.isSaved);
       } catch (error) {
+        setError('Failed to load store details. Please try again later.');
         console.error('Error fetching store data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStoreData();
+    fetchStore();
   }, [storeId]);
+
+  const toggleSave = useCallback(async () => {
+    try {
+      if (!storeData?.id) return;
+      
+      const newSavedState = await storeService.toggleSave(storeData.id);
+      setIsSaved(newSavedState);
+    } catch (error) {
+      console.error('Failed to toggle save:', error);
+      // Optionally show an error message to the user
+    }
+  }, [storeData?.id]);
 
   if (loading) {
     return <ActivityIndicator size="large" color="#036B52" />;
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.retryButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
       
       <View style={styles.headerContainer}>
-      {/* Background Image */}
-      <Image
-        source={require('../assets/images/icon.png')} // Replace with your actual image path
-        style={styles.backgroundImage}
-      />
-
-      {/* Top Overlay Section */}
-      {/* <View style={styles.overlayContainer}>
-        <TouchableOpacity style={styles.backButton}>
-          <Text style={styles.backText}>←</Text>
+        <Image
+          source={{ uri: storeData?.backgroundUrl }}
+          style={styles.backgroundImage}
+        />
+        <TouchableOpacity 
+          style={styles.saveButton}
+          onPress={toggleSave}
+        >
+          <Text style={styles.saveIcon}>
+            {isSaved ? '❤️' : '🤍'}
+          </Text>
         </TouchableOpacity>
 
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>⇪</Text> 
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>♡</Text> 
-          </TouchableOpacity>
-        </View>
-      </View> */}
+        <View style={styles.avaContainer}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{storeData?.itemsLeft}+ left</Text>
+          </View>
 
-      {/* Store Information */}
-      <View style={styles.avaContainer}>
-        {/* Badge */}
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>5+ left</Text>
+          <Image
+            source={{ uri: storeData?.avatarUrl }}
+            style={styles.storeLogo}
+          />
         </View>
-
-        {/* Store Logo */}
-        <Image
-          source={require('../assets/images/icon.png')} // Replace with your logo path
-          style={styles.storeLogo}
-        />
       </View>
-    </View>
 
       {/* Scrollable Content */}
       <ScrollView
@@ -87,37 +125,39 @@ const StoreDetailScreen = () => {
       >
         {/* Store Info */}
         <View style={styles.storeInfoContainer}>
-          <Text style={styles.storeTitle}>Theo Chocolate</Text>
+          <Text style={styles.storeTitle}>{storeData?.title}</Text>
           <Text style={styles.storeSubtitle}>Surprise Bag</Text>
           <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>4.6 (952)</Text>
+            <Text style={styles.ratingText}>
+              {storeData?.rating} ({storeData?.reviews})
+            </Text>
           </View>
-          <Text style={styles.pickUpTime}>Pick up: 1:45 PM - 8:40 PM</Text>
+          <Text style={styles.pickUpTime}>
+            Pick up: {storeData?.pickUpTime}
+          </Text>
           <TouchableOpacity style={styles.todayBadge}>
             <Text style={styles.todayText}>Today</Text>
           </TouchableOpacity>
           <View style={styles.priceContainer}>
-            <Text style={styles.originalPrice}>$18.00</Text>
-            <Text style={styles.currentPrice}>$5.99</Text>
+            <Text style={styles.originalPrice}>
+              ${storeData?.originalPrice.toFixed(2)}
+            </Text>
+            <Text style={styles.currentPrice}>
+              ${storeData?.price.toFixed(2)}
+            </Text>
           </View>
         </View>
 
         {/* Address */}
         <TouchableOpacity style={styles.addressContainer}>
-          <Text style={styles.addressText}>
-            3400 Phinney Ave N, Seattle, WA 98103, USA
-          </Text>
+          <Text style={styles.addressText}>{storeData?.address}</Text>
           <Text style={styles.moreInfoText}>More information about the store</Text>
         </TouchableOpacity>
 
         {/* Description */}
         <View style={styles.descriptionContainer}>
           <Text style={styles.sectionTitle}>What you could get</Text>
-          <Text style={styles.description}>
-            Rescue a Surprise Bag filled with chocolates. Theo will also offer
-            10% off any regular priced purchases you make at the time of pick
-            up.
-          </Text>
+          <Text style={styles.description}>{storeData?.description}</Text>
         </View>
 
         {/* Ingredients & Allergens */}
@@ -129,25 +169,22 @@ const StoreDetailScreen = () => {
         <View style={styles.reviewsContainer}>
           <Text style={styles.sectionTitle}>What other people are saying</Text>
           <View style={styles.ratingOverallContainer}>
-            <Text style={styles.ratingOverall}>4.6 / 5.0</Text>
+            <Text style={styles.ratingOverall}>
+              {storeData?.rating} / 5.0
+            </Text>
             <Text style={styles.reviewsNote}>
-            Based on 952 ratings 
-            {/* over the past 6 months */}
-          </Text>
+              Based on {storeData?.reviews} ratings
+            </Text>
           </View>
           <View style={styles.highlightsContainer}>
-            <View style={styles.highlightItem}>
-              <Text style={styles.highlightEmoji}>😊</Text>
-              <Text style={styles.highlightText}>Friendly staff</Text>
-            </View>
-            <View style={styles.highlightItem}>
-              <Text style={styles.highlightEmoji}>⏱</Text>
-              <Text style={styles.highlightText}>Quick pickup</Text>
-            </View>
-            <View style={styles.highlightItem}>
-              <Text style={styles.highlightEmoji}>💰</Text>
-              <Text style={styles.highlightText}>Great value</Text>
-            </View>
+            {storeData?.highlights.map((highlight, index) => (
+              <View key={index} style={styles.highlightItem}>
+                <Text style={styles.highlightEmoji}>
+                  {getEmojiForHighlight(highlight)}
+                </Text>
+                <Text style={styles.highlightText}>{highlight}</Text>
+              </View>
+            ))}
           </View>
         </View>
       </ScrollView>
@@ -159,6 +196,19 @@ const StoreDetailScreen = () => {
        </View>
     </View>
   );
+};
+
+// Helper function to map highlights to emojis
+const getEmojiForHighlight = (highlight: string): string => {
+  const emojiMap: { [key: string]: string } = {
+    'Friendly staff': '😊',
+    'Quick pickup': '⚡',
+    'Great value': '💰',
+    'Fresh baked': '🥖',
+    'Local favorite': '⭐',
+    'Eco-friendly': '🌱',
+  };
+  return emojiMap[highlight] || '✨';
 };
 
 const styles = StyleSheet.create({
@@ -399,7 +449,49 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
-  }
+  },
+  errorContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#036B52',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButton: {
+    position: 'absolute',
+    top: 40,
+    right: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  saveIcon: {
+    fontSize: 20,
+  },
 });
 
 export default StoreDetailScreen;

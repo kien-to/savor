@@ -26,13 +26,13 @@ export default function TabLayout() {
           default: {},
         }),
       }}>
-        <Tabs.Screen
+        {/* <Tabs.Screen
         name="index"
         options={{
           title: 'Index',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="login"
         options={{
@@ -54,27 +54,27 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="store"
         options={{
           title: 'Store',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="tag.fill" color={color} />,
         }}
-      />
-      <Tabs.Screen
+      /> */}
+      {/* <Tabs.Screen
         name="payment"
         options={{
           title: 'Payment',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="tag.fill" color={color} />,
         }}
-      />
-      <Tabs.Screen
+      /> */}
+      {/* <Tabs.Screen
         name="browse"
         options={{
           title: 'Browse',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="tag.fill" color={color} />,
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="favorites"
         options={{

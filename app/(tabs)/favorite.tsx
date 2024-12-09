@@ -1,63 +1,85 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { storeService } from '../../services/store';
+import { useRouter } from 'expo-router';
+import { Store } from '../../types/store';
 
 const FavoritesScreen = () => {
-  // Sample Data for Favorites
-  const favorites = [
-    {
-      id: '1',
-      name: 'Caffe Ladro - Pine St.',
-      subtitle: 'Surprise Bag',
-      pickUpTime: 'Pick up today 8:30 PM - 8:55 PM',
-      originalPrice: 12.0,
-      discountedPrice: 3.99,
-      rating: 4.8,
-      distance: '0.2 mi',
-      image: 'https://via.placeholder.com/150', // Replace with your image URL
-      isSoldOut: true,
-    },
-  ];
+  const [favorites, setFavorites] = useState<Store[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const fetchFavorites = async () => {
+    try {
+      setLoading(true);
+      const data = await storeService.getFavorites();
+      setFavorites(data);
+    } catch (err) {
+      setError('Failed to load favorites');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavorites();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#036B52" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <Text style={styles.header}>Favorites</Text>
-
-      {/* Favorites List */}
-      <FlatList
-        data={favorites}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            {/* Image Section */}
-            <Image source={{ uri: item.image }} style={styles.cardImage} />
-            {item.isSoldOut && (
-              <View style={styles.soldOutBadge}>
-                <Text style={styles.soldOutText}>Sold out</Text>
-              </View>
-            )}
-
-            {/* Content Section */}
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-              <Text style={styles.pickUpTime}>{item.pickUpTime}</Text>
-
-              {/* Price and Rating Section */}
-              <View style={styles.cardFooter}>
-                <View style={styles.ratingContainer}>
-                  <Text style={styles.ratingText}>{item.rating}</Text>
-                  <Text style={styles.distanceText}>{item.distance}</Text>
-                </View>
-                <View style={styles.priceContainer}>
-                  <Text style={styles.originalPrice}>${item.originalPrice.toFixed(2)}</Text>
-                  <Text style={styles.discountedPrice}>${item.discountedPrice.toFixed(2)}</Text>
+      {favorites.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No favorites yet</Text>
+          <Text style={styles.emptySubtext}>Save some stores to see them here!</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={favorites}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => router.push({
+                pathname: '/StoreScreen',
+                params: { storeId: item.id }
+              })}
+            >
+              <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardSubtitle}>{item.description}</Text>
+                <Text style={styles.pickUpTime}>{item.pickUpTime}</Text>
+                <View style={styles.cardFooter}>
+                  <View style={styles.ratingContainer}>
+                    <Text style={styles.ratingText}>{item.rating}</Text>
+                    <Text style={styles.distanceText}>{item.distance}</Text>
+                  </View>
+                  <Text style={styles.price}>${item.price.toFixed(2)}</Text>
                 </View>
               </View>
-            </View>
-          </View>
-        )}
-      />
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </View>
   );
 };
@@ -89,20 +111,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 150,
     resizeMode: 'cover',
-  },
-  soldOutBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: '#333',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  soldOutText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
   },
   cardContent: {
     padding: 16,
@@ -141,18 +149,37 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  priceContainer: {
-    alignItems: 'flex-end',
-  },
-  originalPrice: {
-    fontSize: 12,
-    color: '#666',
-    textDecorationLine: 'line-through',
-  },
-  discountedPrice: {
-    fontSize: 14,
+  price: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#036B52',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 
