@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ActivityIndicator, RefreshControl, ScrollView } from 'react-native';
 import { storeService } from '../../services/store';
 import { useRouter } from 'expo-router';
 import { Store } from '../../types/store';
@@ -9,15 +9,21 @@ const FavoritesScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchFavorites = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Starting to fetch favorites...');
+      
       const data = await storeService.getFavorites();
+      console.log('Favorites fetched successfully:', data);
+      
       setFavorites(data);
-    } catch (err) {
-      setError('Failed to load favorites');
-      console.error(err);
+    } catch (err: any) {
+      console.error('Error in fetchFavorites:', err);
+      setError(err.message || 'Failed to load favorites');
     } finally {
       setLoading(false);
     }
@@ -25,6 +31,17 @@ const FavoritesScreen = () => {
 
   useEffect(() => {
     fetchFavorites();
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchFavorites();
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
   if (loading) {
@@ -39,6 +56,12 @@ const FavoritesScreen = () => {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton} 
+          onPress={fetchFavorites}
+        >
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -47,12 +70,31 @@ const FavoritesScreen = () => {
     <View style={styles.container}>
       <Text style={styles.header}>Favorites</Text>
       {favorites.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No favorites yet</Text>
-          <Text style={styles.emptySubtext}>Save some stores to see them here!</Text>
-        </View>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#036B52']}
+              tintColor="#036B52"
+            />
+          }
+        >
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No favorites yet</Text>
+            <Text style={styles.emptySubtext}>Save some stores to see them here!</Text>
+          </View>
+        </ScrollView>
       ) : (
         <FlatList
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#036B52']}
+              tintColor="#036B52"
+            />
+          }
           data={favorites}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -158,11 +200,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   errorText: {
     color: 'red',
-    fontSize: 16,
     textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#036B52',
+    padding: 12,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: 'white',
+    fontSize: 16,
   },
   emptyContainer: {
     flex: 1,

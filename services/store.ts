@@ -34,10 +34,14 @@ export const storeService = {
   async getFavorites(): Promise<Store[]> {
     try {
       const token = await SecureStore.getItem('authToken');
+      console.log('Token:', token ? 'exists' : 'missing');
+      
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error('Authentication token not found');
       }
 
+      console.log('Fetching from:', `${API_URL}/api/home/stores/favorites`);
+      
       const response = await fetch(`${API_URL}/api/home/stores/favorites`, {
         method: 'GET',
         headers: {
@@ -46,15 +50,25 @@ export const storeService = {
         },
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch favorites');
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
       }
 
-      return response.json();
-    } catch (error) {
-      console.error('Error fetching favorites:', error);
-      throw error;
+      const data = await response.json();
+      console.log('Received data:', data);
+      return data;
+      
+    } catch (error: any) {
+      console.error('Detailed error:', {
+        message: error.message,
+        stack: error.stack,
+        cause: error.cause
+      });
+      throw new Error(`Failed to fetch favorites: ${error.message}`);
     }
   }
 }; 

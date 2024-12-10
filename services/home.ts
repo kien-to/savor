@@ -27,7 +27,8 @@ export const homeService = {
   async getHomePageData(latitude: number, longitude: number): Promise<HomePageData> {
     try {
       const response = await fetch(
-        `${API_URL}/api/home?latitude=${latitude}&longitude=${longitude}`,
+        `${API_URL}/api/home`,
+        // ?latitude=${latitude}&longitude=${longitude}`,
         {
           method: 'GET',
           headers: {

@@ -1,9 +1,31 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, RefreshControl } from 'react-native';
 
 const ProfileScreen = () => {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // Add your refresh logic here
+      // await fetchProfileData();
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#036B52']}
+          tintColor="#036B52"
+        />
+      }
+    >
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.userInfo}>
@@ -42,7 +64,7 @@ const ProfileScreen = () => {
 
       {/* Version Info */}
       <Text style={styles.versionText}>Version 24.11.0 (33015)</Text>
-    </View>
+    </ScrollView>
   );
 };
 

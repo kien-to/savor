@@ -45,6 +45,7 @@ const StoreDetailScreen = () => {
         setLoading(true);
         setError(null);
         const data = await getStore(Number(storeId));
+        console.log(data);
         setStoreData(data);
         setIsSaved(data.isSaved);
       } catch (error) {
