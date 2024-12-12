@@ -20,10 +20,11 @@ const FavoritesScreen = () => {
       const data = await storeService.getFavorites();
       console.log('Favorites fetched successfully:', data);
       
-      setFavorites(data);
+      setFavorites(data || []);
     } catch (err: any) {
       console.error('Error in fetchFavorites:', err);
       setError(err.message || 'Failed to load favorites');
+      setFavorites([]);
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ const FavoritesScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Favorites</Text>
-      {favorites.length === 0 ? (
+      {favorites?.length === 0 ? (
         <ScrollView
           refreshControl={
             <RefreshControl

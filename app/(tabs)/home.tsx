@@ -44,11 +44,35 @@ const HomeScreen = () => {
       }
 
       const location = await Location.getCurrentPositionAsync({});
-      const data = await homeService.getHomePageData(
-        location.coords.latitude,
-        location.coords.longitude
-      );
-      setHomeData(data);
+      const [homeDataResponse, favoritesResponse] = await Promise.all([
+        homeService.getHomePageData(
+          location.coords.latitude,
+          location.coords.longitude
+        ),
+        storeService.getFavorites().catch(() => [])
+      ]);
+
+      // Create a Set of favorite store IDs for quick lookup
+      const favoriteStoreIds = new Set((favoritesResponse || []).map(store => store.id));
+
+      // Ensure recommendedStores and pickUpTomorrow are arrays before mapping
+      const recommendedStores = homeDataResponse?.recommendedStores || [];
+      const pickUpTomorrow = homeDataResponse?.pickUpTomorrow || [];
+
+      // Update the isSaved property for all stores
+      const updatedHomeData = {
+        ...homeDataResponse,
+        recommendedStores: recommendedStores.map(store => ({
+          ...store,
+          isSaved: favoriteStoreIds.has(store.id)
+        })),
+        pickUpTomorrow: pickUpTomorrow.map(store => ({
+          ...store,
+          isSaved: favoriteStoreIds.has(store.id)
+        }))
+      };
+
+      setHomeData(updatedHomeData);
     } catch (err) {
       setError('Failed to fetch home data');
       console.error(err);

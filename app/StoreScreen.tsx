@@ -44,10 +44,24 @@ const StoreDetailScreen = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getStore(Number(storeId));
-        console.log(data);
-        setStoreData(data);
-        setIsSaved(data.isSaved);
+        
+        // Fetch both store data and favorites simultaneously
+        const [storeData, favorites] = await Promise.all([
+          getStore(Number(storeId)),
+          storeService.getFavorites().catch(() => [])
+        ]);
+
+        // Check if this store is in favorites
+        const isFavorite = (favorites || []).some(favorite => favorite.id === storeData.id);
+        
+        // Update store data with correct saved status
+        const updatedStoreData = {
+          ...storeData,
+          isSaved: isFavorite
+        };
+
+        setStoreData(updatedStoreData);
+        setIsSaved(isFavorite);
       } catch (error) {
         setError('Failed to load store details. Please try again later.');
         console.error('Error fetching store data:', error);
@@ -207,7 +221,7 @@ const getEmojiForHighlight = (highlight: string): string => {
     'Great value': '💰',
     'Fresh baked': '🥖',
     'Local favorite': '⭐',
-    'Eco-friendly': '🌱',
+    'Eco-friendly': '���',
   };
   return emojiMap[highlight] || '✨';
 };
