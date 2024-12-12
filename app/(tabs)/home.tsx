@@ -323,7 +323,7 @@ const HomeScreen = () => {
               <Text style={styles.sectionTitle}>Lấy hàng ngày mai</Text>
               <TouchableOpacity 
                 onPress={() => router.push({
-                  pathname: '/AllStoresScreen',
+                  pathname: '/StoreListScreen',
                   params: { 
                     stores: encodeURIComponent(JSON.stringify(filteredHomeData?.pickUpTomorrow)),
                     title: 'Lấy hàng ngày mai'
