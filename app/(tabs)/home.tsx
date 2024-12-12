@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { homeService } from '../../services/home';
 import * as Location from 'expo-location';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, RefreshControl, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { storeService } from '../../services/store';
 
@@ -30,9 +30,12 @@ const HomeScreen = () => {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [homeData, setHomeData] = useState<HomePageData | null>(null);
+  const [filteredHomeData, setFilteredHomeData] = useState<HomePageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAllRecommended, setShowAllRecommended] = useState(false);
+  const [showAllTomorrow, setShowAllTomorrow] = useState(false);
 
   const fetchHomeData = async () => {
     try {
@@ -85,6 +88,36 @@ const HomeScreen = () => {
     fetchHomeData();
   }, []);
 
+  useEffect(() => {
+    if (!homeData) {
+      setFilteredHomeData(null);
+      return;
+    }
+
+    if (!searchText.trim()) {
+      setFilteredHomeData(homeData);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    
+    const filteredRecommended = homeData.recommendedStores.filter(store =>
+      store.title.toLowerCase().includes(searchLower) ||
+      store.description.toLowerCase().includes(searchLower)
+    );
+
+    const filteredPickUpTomorrow = homeData.pickUpTomorrow.filter(store =>
+      store.title.toLowerCase().includes(searchLower) ||
+      store.description.toLowerCase().includes(searchLower)
+    );
+
+    setFilteredHomeData({
+      ...homeData,
+      recommendedStores: filteredRecommended,
+      pickUpTomorrow: filteredPickUpTomorrow,
+    });
+  }, [searchText, homeData]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -96,11 +129,27 @@ const HomeScreen = () => {
     }
   }, []);
 
+  const handleUnauthenticated = () => {
+    Alert.alert(
+      "Chưa đăng nhập",
+      "Vui lòng đăng nhập để lưu cửa hàng",
+      [
+        {
+          text: "Đăng nhập",
+          onPress: () => router.push("/login"),
+        },
+        {
+          text: "Hủy",
+          style: "cancel"
+        },
+      ]
+    );
+  };
+
   const toggleSave = async (storeId: string) => {
     try {
       const newSavedState = await storeService.toggleSave(storeId);
       
-      // Update the stores in state
       setHomeData(prevData => {
         if (!prevData) return prevData;
 
@@ -117,9 +166,12 @@ const HomeScreen = () => {
           pickUpTomorrow: updateStores(prevData.pickUpTomorrow),
         };
       });
-    } catch (error) {
-      console.error('Failed to toggle save:', error);
-      // Optionally show an error message to the user
+    } catch (error: any) {
+      if (error.message.includes('User not authenticated')) {
+        handleUnauthenticated();
+      } else {
+        Alert.alert('Lỗi', 'Không thể lưu cửa hàng');
+      }
     }
   };
 
@@ -160,6 +212,29 @@ const HomeScreen = () => {
     </TouchableOpacity>
   );
 
+  const searchInputSection = (
+    <View style={styles.searchContainer}>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Tìm kiếm cửa hàng..."
+        value={searchText}
+        onChangeText={setSearchText}
+        returnKeyType="search"
+        clearButtonMode="while-editing"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      {searchText.length > 0 && (
+        <TouchableOpacity 
+          style={styles.clearButton}
+          onPress={() => setSearchText('')}
+        >
+          {/* <Text>✕</Text> */}
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -171,7 +246,11 @@ const HomeScreen = () => {
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorText}>
+          {error === 'Location permission denied' 
+            ? 'Vui lòng cho phép truy cập vị trí'
+            : 'Đã có lỗi xảy ra'}
+        </Text>
       </View>
     );
   }
@@ -183,18 +262,12 @@ const HomeScreen = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={['#your-primary-color']} // Android
-          tintColor="#your-primary-color"  // iOS
+          colors={['#036B52']}
+          tintColor="#036B52"
         />
       }
     >
       <View style={styles.content}>
-        {/* <View style={styles.header}>
-          {!homeData?.emailVerified && (
-            <Text style={styles.verifyEmail}>Verify your email address</Text>
-          )}
-        </View> */}
-
         <View style={styles.locationContainer}>
           <Text style={styles.locationText}>📍 {homeData?.userLocation.city}</Text>
           <Text style={styles.distanceText}>
@@ -202,42 +275,65 @@ const HomeScreen = () => {
           </Text>
         </View>
 
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search"
-          value={searchText}
-          onChangeText={setSearchText}
-        />
+        {searchInputSection}
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recommended for you</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>See all</Text>
-          </TouchableOpacity>
-        </View>
-        <FlatList    
-          horizontal
-          data={homeData?.recommendedStores}
-          renderItem={({ item }) => renderItem(item)}
-          keyExtractor={(item) => item.id}
-          showsHorizontalScrollIndicator={false}
-          style={styles.list}
-        />
+        {searchText.trim().length > 0 && 
+         filteredHomeData?.recommendedStores.length === 0 && 
+         filteredHomeData?.pickUpTomorrow.length === 0 && (
+          <View style={styles.noResults}>
+            <Text style={styles.noResultsText}>
+              Không tìm thấy cửa hàng nào phù hợp với "{searchText}"
+            </Text>
+          </View>
+        )}
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Pick up tomorrow</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>See all</Text>
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          horizontal
-          data={homeData?.pickUpTomorrow}
-          renderItem={({ item }) => renderItem(item)}
-          keyExtractor={(item) => item.id}
-          showsHorizontalScrollIndicator={false}
-          style={styles.list}
-        />
+        {(!searchText.trim() || filteredHomeData?.recommendedStores.length! > 0) && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Gợi ý cho bạn</Text>
+              <TouchableOpacity onPress={() => setShowAllRecommended(!showAllRecommended)}>
+                <Text style={styles.seeAllText}>
+                  {showAllRecommended ? 'Thu gọn' : 'Xem tất cả'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList    
+              horizontal={!showAllRecommended}
+              data={filteredHomeData?.recommendedStores}
+              renderItem={({ item }) => renderItem(item)}
+              keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={showAllRecommended && styles.verticalContainer}
+              style={styles.list}
+              numColumns={showAllRecommended ? 2 : 1}
+              key={showAllRecommended ? 'vertical' : 'horizontal'}
+            />
+          </>
+        )}
+
+        {(!searchText.trim() || filteredHomeData?.pickUpTomorrow.length! > 0) && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Lấy hàng ngày mai</Text>
+              <TouchableOpacity onPress={() => setShowAllTomorrow(!showAllTomorrow)}>
+                <Text style={styles.seeAllText}>
+                  {showAllTomorrow ? 'Thu gọn' : 'Xem tất cả'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              horizontal={!showAllTomorrow}
+              data={filteredHomeData?.pickUpTomorrow}
+              renderItem={({ item }) => renderItem(item)}
+              keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={showAllTomorrow && styles.verticalContainer}
+              style={styles.list}
+              numColumns={showAllTomorrow ? 2 : 1}
+              key={showAllTomorrow ? 'vertical' : 'horizontal'}
+            />
+          </>
+        )}
       </View>
     </ScrollView>
   );
@@ -250,6 +346,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    marginTop: 10,
   },
   header: {
     backgroundColor: '#036B52',
@@ -315,6 +412,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
     width: 200,
+    height: 200,
+    // width: showAllRecommended || showAllTomorrow ? '48%' : 200,
+    // marginRight: showAllRecommended || showAllTomorrow ? 0 : 16,
+    marginBottom: 16,
   },
   cardImage: {
     width: '100%',
@@ -380,6 +481,30 @@ const styles = StyleSheet.create({
   },
   saveIcon: {
     fontSize: 16,
+  },
+  searchContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    padding: 5,
+  },
+  noResults: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  noResultsText: {
+    color: '#666',
+    fontSize: 16,
+  },
+  verticalContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
   },
 });
 
