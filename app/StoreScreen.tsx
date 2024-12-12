@@ -44,10 +44,11 @@ const StoreDetailScreen = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
+        console.log("storeId", storeId);
         // Fetch both store data and favorites simultaneously
         const [storeData, favorites] = await Promise.all([
-          getStore(Number(storeId)),
+          getStore(storeId.toString()),
           storeService.getFavorites().catch(() => [])
         ]);
 
@@ -92,12 +93,12 @@ const StoreDetailScreen = () => {
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorText}>Không thể tải thông tin cửa hàng. Vui lòng thử lại sau.</Text>
         <TouchableOpacity 
           style={styles.retryButton}
           onPress={() => router.back()}
         >
-          <Text style={styles.retryButtonText}>Go Back</Text>
+          <Text style={styles.retryButtonText}>Quay lại</Text>
         </TouchableOpacity>
       </View>
     );
@@ -122,7 +123,7 @@ const StoreDetailScreen = () => {
 
         <View style={styles.avaContainer}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{storeData?.itemsLeft}+ left</Text>
+            <Text style={styles.badgeText}>Còn {storeData?.itemsLeft}+ phần</Text>
           </View>
 
           <Image
@@ -171,28 +172,28 @@ const StoreDetailScreen = () => {
 
         {/* Description */}
         <View style={styles.descriptionContainer}>
-          <Text style={styles.sectionTitle}>What you could get</Text>
+          <Text style={styles.sectionTitle}>Bạn có thể nhận được</Text>
           <Text style={styles.description}>{storeData?.description}</Text>
         </View>
 
         {/* Ingredients & Allergens */}
         <TouchableOpacity style={styles.ingredientsContainer}>
-          <Text style={styles.ingredientsText}>Ingredients & allergens</Text>
+          <Text style={styles.ingredientsText}>Thành phần & dị ứng</Text>
         </TouchableOpacity>
 
         {/* Customer Reviews */}
         <View style={styles.reviewsContainer}>
-          <Text style={styles.sectionTitle}>What other people are saying</Text>
+          <Text style={styles.sectionTitle}>Mọi người nói gì</Text>
           <View style={styles.ratingOverallContainer}>
             <Text style={styles.ratingOverall}>
               {storeData?.rating} / 5.0
             </Text>
             <Text style={styles.reviewsNote}>
-              Based on {storeData?.reviews} ratings
+              Dựa trên {storeData?.reviews} đánh giá
             </Text>
           </View>
           <View style={styles.highlightsContainer}>
-            {storeData?.highlights.map((highlight, index) => (
+            {storeData?.highlights?.map((highlight, index) => (
               <View key={index} style={styles.highlightItem}>
                 <Text style={styles.highlightEmoji}>
                   {getEmojiForHighlight(highlight)}
@@ -206,7 +207,7 @@ const StoreDetailScreen = () => {
 
       <View style={styles.reserveButtonContainer}>
          <TouchableOpacity style={styles.reserveButton} onPress={() => alert('Reservation Confirmed')}>
-           <Text style={styles.reserveButtonText}>Reserve</Text>
+           <Text style={styles.reserveButtonText}>Đặt ngay</Text>
          </TouchableOpacity>
        </View>
     </View>
@@ -216,12 +217,12 @@ const StoreDetailScreen = () => {
 // Helper function to map highlights to emojis
 const getEmojiForHighlight = (highlight: string): string => {
   const emojiMap: { [key: string]: string } = {
-    'Friendly staff': '😊',
-    'Quick pickup': '⚡',
-    'Great value': '💰',
-    'Fresh baked': '🥖',
-    'Local favorite': '⭐',
-    'Eco-friendly': '���',
+    'Nhân viên thân thiện': '😊',
+    'Lấy hàng nhanh': '⚡',
+    'Giá trị tốt': '💰',
+    'Mới nướng': '🥖',
+    'Yêu thích địa phương': '⭐',
+    'Thân thiện môi trường': '🌱',
   };
   return emojiMap[highlight] || '✨';
 };

@@ -3,10 +3,10 @@ import * as SecureStore from 'expo-secure-store';
 const API_URL = 'http://localhost:8080';
 // || process.env.EXPO_PUBLIC_API_URL;
 
-export const getStore = async (storeId: number) => {
+export const getStore = async (storeId: string) => {
   try {
     const token = await SecureStore.getItem('authToken');
-    console.log('Actual token value:', token);
+    // console.log('Actual token value:', token);
     
     if (!token) {
       throw new Error('No authentication token found');

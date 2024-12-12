@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
     width: 200,
-    height: 200,
+    height: 240,
     // width: showAllRecommended || showAllTomorrow ? '48%' : 200,
     // marginRight: showAllRecommended || showAllTomorrow ? 0 : 16,
     marginBottom: 16,

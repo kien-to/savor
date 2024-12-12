@@ -15,4 +15,6 @@ export interface Store {
   itemsLeft?: number;
   highlights?: string[];
   isSaved?: boolean;
+  latitude: number;
+  longitude: number;
 } 

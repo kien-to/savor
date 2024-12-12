@@ -1,6 +1,6 @@
-// import { getToken } from '../services/auth';  // Adjust the path as needed
-
 interface Store {
+  longitude: any;
+  latitude: any;
   id: string;
   title: string;
   description: string;
@@ -27,8 +27,7 @@ export const homeService = {
   async getHomePageData(latitude: number, longitude: number): Promise<HomePageData> {
     try {
       const response = await fetch(
-        `${API_URL}/api/home`,
-        // ?latitude=${latitude}&longitude=${longitude}`,
+        `${API_URL}/api/home?latitude=${latitude}&longitude=${longitude}`,
         {
           method: 'GET',
           headers: {
@@ -42,8 +41,11 @@ export const homeService = {
         throw new Error(error.error || 'Failed to fetch home data');
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('API response data:', data);
+      return data;
     } catch (error) {
+      console.error('API error:', error);
       throw error;
     }
   }
