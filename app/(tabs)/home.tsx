@@ -291,10 +291,16 @@ const HomeScreen = () => {
           <>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Gợi ý cho bạn</Text>
-              <TouchableOpacity onPress={() => setShowAllRecommended(!showAllRecommended)}>
-                <Text style={styles.seeAllText}>
-                  {showAllRecommended ? 'Thu gọn' : 'Xem tất cả'}
-                </Text>
+              <TouchableOpacity 
+                onPress={() => router.push({
+                  pathname: '/StoreListScreen',
+                  params: { 
+                    stores: encodeURIComponent(JSON.stringify(filteredHomeData?.recommendedStores)),
+                    title: 'Gợi ý cho bạn'
+                  }
+                })}
+              >
+                <Text style={styles.seeAllText}>Xem tất cả</Text>
               </TouchableOpacity>
             </View>
             <FlatList    
@@ -315,10 +321,16 @@ const HomeScreen = () => {
           <>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Lấy hàng ngày mai</Text>
-              <TouchableOpacity onPress={() => setShowAllTomorrow(!showAllTomorrow)}>
-                <Text style={styles.seeAllText}>
-                  {showAllTomorrow ? 'Thu gọn' : 'Xem tất cả'}
-                </Text>
+              <TouchableOpacity 
+                onPress={() => router.push({
+                  pathname: '/AllStoresScreen',
+                  params: { 
+                    stores: encodeURIComponent(JSON.stringify(filteredHomeData?.pickUpTomorrow)),
+                    title: 'Lấy hàng ngày mai'
+                  }
+                })}
+              >
+                <Text style={styles.seeAllText}>Xem tất cả</Text>
               </TouchableOpacity>
             </View>
             <FlatList

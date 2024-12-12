@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ActivityIndicator, RefreshControl, ScrollView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ActivityIndicator, RefreshControl, ScrollView, Alert } from 'react-native';
 import { storeService } from '../../services/store';
 import { useRouter } from 'expo-router';
 import { Store } from '../../types/store';
@@ -11,19 +11,35 @@ const FavoritesScreen = () => {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
+  const handleUnauthenticated = () => {
+    Alert.alert(
+      "Chưa đăng nhập",
+      "Vui lòng đăng nhập để xem danh sách yêu thích",
+      [
+        {
+          text: "Đăng nhập",
+          onPress: () => router.push("/login"),
+        },
+        {
+          text: "Hủy",
+          style: "cancel"
+        },
+      ]
+    );
+  };
+
   const fetchFavorites = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Starting to fetch favorites...');
-      
       const data = await storeService.getFavorites();
-      console.log('Favorites fetched successfully:', data);
-      
       setFavorites(data || []);
     } catch (err: any) {
-      console.error('Error in fetchFavorites:', err);
-      setError(err.message || 'Failed to load favorites');
+      if (err.message.includes('User not authenticated')) {
+        handleUnauthenticated();
+      } else {
+        setError('Không thể tải danh sách yêu thích');
+      }
       setFavorites([]);
     } finally {
       setLoading(false);
@@ -61,7 +77,7 @@ const FavoritesScreen = () => {
           style={styles.retryButton} 
           onPress={fetchFavorites}
         >
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={styles.retryText}>Thử lại</Text>
         </TouchableOpacity>
       </View>
     );
@@ -69,7 +85,7 @@ const FavoritesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Favorites</Text>
+      <Text style={styles.header}>Yêu thích</Text>
       {favorites?.length === 0 ? (
         <ScrollView
           refreshControl={
@@ -82,8 +98,8 @@ const FavoritesScreen = () => {
           }
         >
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No favorites yet</Text>
-            <Text style={styles.emptySubtext}>Save some stores to see them here!</Text>
+            <Text style={styles.emptyText}>Chưa có cửa hàng yêu thích</Text>
+            <Text style={styles.emptySubtext}>Lưu một số cửa hàng để xem chúng ở đây!</Text>
           </View>
         </ScrollView>
       ) : (
