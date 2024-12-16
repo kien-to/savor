@@ -7,18 +7,64 @@ import {
   Image,
   ScrollView,
   Modal,
+  Alert,
 } from 'react-native';
+import { useStripe } from '@stripe/stripe-react-native';
+import { paymentService } from '../services/payment';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 const PaymentScreen = () => {
+  const stripe = useStripe();
+  const router = useRouter();
+  const { storeId } = useLocalSearchParams();
   const [quantity, setQuantity] = useState(1);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Apple Pay');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Payment Card');
+  const [loading, setLoading] = useState(false);
 
   const price = 5.99; // Price per item
   const subtotal = price * quantity;
 
-  const handlePayment = () => {
-    alert('Payment Successful!');
+  const handlePayment = async () => {
+    try {
+      setLoading(true);
+      
+      // Create payment intent
+      const { clientSecret } = await paymentService.createPaymentIntent(
+        storeId.toString(),
+        quantity,
+        subtotal,
+        selectedPaymentMethod
+      );
+
+      // Handle different payment methods
+      if (selectedPaymentMethod === 'Apple Pay') {
+        const { error: paymentError } = await stripe.handleNextAction(clientSecret);
+        if (paymentError) {
+          Alert.alert('Lỗi', 'Không thể xử lý thanh toán');
+          return;
+        }
+      } else {
+        // Handle card payment
+        const { error } = await stripe.confirmPayment(clientSecret, {
+          paymentMethodType: 'Card',
+        });
+        
+        if (error) {
+          Alert.alert('Lỗi', error.message);
+          return;
+        }
+      }
+
+      // Payment successful
+      Alert.alert('Thành công', 'Đặt hàng thành công!');
+      router.replace('/(tabs)');
+      
+    } catch (error) {
+      Alert.alert('Lỗi', 'Có lỗi xảy ra trong quá trình thanh toán');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openModal = () => {
@@ -29,7 +75,7 @@ const PaymentScreen = () => {
     setIsModalVisible(false);
   };
 
-  const selectPaymentMethod = (method) => {
+  const selectPaymentMethod = (method: React.SetStateAction<string>) => {
     setSelectedPaymentMethod(method);
     closeModal();
   };
@@ -38,9 +84,9 @@ const PaymentScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
+        {/* <TouchableOpacity style={styles.backButton}>
           <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={styles.headerTitle}>Theo Chocolate</Text>
       </View>
 
@@ -163,7 +209,7 @@ const PaymentScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 70,
+    // paddingVertical: 70,
     backgroundColor: '#FFF',
   },
   header: {

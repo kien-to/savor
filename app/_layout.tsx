@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider } from '../context/AuthContext';
@@ -30,6 +31,10 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+      <StripeProvider
+      publishableKey={process.env.PUBLISHABLE_KEY}
+      merchantIdentifier="merchant.com.savor.app" // Optional for Apple Pay
+    >
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -67,6 +72,7 @@ export default function RootLayout() {
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
+      </StripeProvider>
     </AuthProvider>
   );
 }

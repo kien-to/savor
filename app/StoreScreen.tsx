@@ -206,10 +206,22 @@ const StoreDetailScreen = () => {
       </ScrollView>
 
       <View style={styles.reserveButtonContainer}>
-         <TouchableOpacity style={styles.reserveButton} onPress={() => alert('Reservation Confirmed')}>
-           <Text style={styles.reserveButtonText}>Đặt ngay</Text>
-         </TouchableOpacity>
-       </View>
+        <TouchableOpacity 
+          style={styles.reserveButton} 
+          onPress={() => router.push({
+            pathname: '/PaymentScreen',
+            params: {
+              storeId: storeData?.id,
+              storeTitle: storeData?.title,
+              price: storeData?.price,
+              pickUpTime: storeData?.pickUpTime,
+              itemsLeft: storeData?.itemsLeft
+            }
+          })}
+        >
+          <Text style={styles.reserveButtonText}>Đặt ngay</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
