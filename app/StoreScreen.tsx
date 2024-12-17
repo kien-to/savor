@@ -45,7 +45,7 @@ const StoreDetailScreen = () => {
         setLoading(true);
         setError(null);
 
-        console.log("storeId", storeId);
+        console.log("storeId in here", storeId);
         // Fetch both store data and favorites simultaneously
         const [storeData, favorites] = await Promise.all([
           getStore(storeId.toString()),

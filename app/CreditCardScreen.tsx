@@ -2,81 +2,99 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   Switch,
   KeyboardAvoidingView,
   ScrollView,
+  Alert,
 } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { CardField, useStripe, CardFieldInput } from '@stripe/stripe-react-native';
+import { paymentService } from '../services/payment';
 
-const CreditCardScreen = ({ route, navigation }) => {
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [securityCode, setSecurityCode] = useState('');
-  const [postalCode, setPostalCode] = useState('');
+const CreditCardScreen = () => {
+  const router = useRouter();
+  const { totalAmount, storeId } = useLocalSearchParams();
+  const { createPaymentMethod, confirmPayment } = useStripe();
   const [saveForFuture, setSaveForFuture] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
 
-  const { totalAmount } = route.params; // Passed from the Payment Screen
+  const handlePayment = async () => {
+    if (!cardComplete) {
+      Alert.alert('Error', 'Please complete card information');
+      return;
+    }
 
-  const handlePayment = () => {
-    alert('Payment Successful!');
-    navigation.goBack(); // Navigate back to the payment screen
+    try {
+      setLoading(true);
+
+      // 1. Create payment method from card
+      const { paymentMethod, error: paymentMethodError } = await createPaymentMethod({
+        paymentMethodType: 'Card',
+      });
+
+      if (paymentMethodError) {
+        Alert.alert('Error', paymentMethodError.message);
+        return;
+      }
+
+      // 2. Create payment intent
+      const { clientSecret } = await paymentService.createPaymentIntent(
+        storeId?.toString() || '',
+        1,
+        Number(totalAmount),
+        'Payment Card'
+      );
+
+      // 3. Confirm payment with payment method
+      const { error: confirmError } = await confirmPayment(clientSecret, {
+        paymentMethodType: 'Card',
+      });
+
+      if (confirmError) {
+        Alert.alert('Error', confirmError.message);
+        return;
+      }
+
+      Alert.alert('Success', 'Payment completed successfully!');
+      router.replace('/(tabs)');
+
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Payment failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Payment card</Text>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.cancelButton}>Cancel</Text>
+          <Text style={styles.headerTitle}>Thẻ thanh toán</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.cancelButton}>Hủy</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Card Number */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Card number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="1234 5678 9012 3456"
-            keyboardType="numeric"
-            value={cardNumber}
-            onChangeText={setCardNumber}
-            maxLength={19} // Format as XXXX XXXX XXXX XXXX
-          />
-        </View>
+        <CardField
+          postalCodeEnabled={true}
+          placeholder={{
+            number: '4242 4242 4242 4242',
+          }}
+          cardStyle={{
+            backgroundColor: '#FFFFFF',
+            textColor: '#000000',
+          }}
+          style={styles.cardField}
+          onCardChange={(cardDetails) => {
+            setCardComplete(cardDetails.complete);
+          }}
+        />
 
-        {/* Expiry Date and Security Code */}
-        <View style={styles.row}>
-          <View style={[styles.inputContainer, styles.rowItem]}>
-            <Text style={styles.inputLabel}>Expiry date</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="MM/YY"
-              keyboardType="numeric"
-              value={expiryDate}
-              onChangeText={setExpiryDate}
-              maxLength={5} // Format as MM/YY
-            />
-          </View>
-          <View style={[styles.inputContainer, styles.rowItem]}>
-            <Text style={styles.inputLabel}>Security code</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="3 digits"
-              keyboardType="numeric"
-              value={securityCode}
-              onChangeText={setSecurityCode}
-              maxLength={3}
-            />
-          </View>
-        </View>
-
-        {/* Save for Future Reservations */}
         <View style={styles.toggleContainer}>
-          <Text style={styles.toggleLabel}>Save for future reservations</Text>
+          <Text style={styles.toggleLabel}>Lưu cho lần sau</Text>
           <Switch
             value={saveForFuture}
             onValueChange={setSaveForFuture}
@@ -85,21 +103,14 @@ const CreditCardScreen = ({ route, navigation }) => {
           />
         </View>
 
-        {/* Postal Code */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Postal code</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Postal code"
-            keyboardType="default"
-            value={postalCode}
-            onChangeText={setPostalCode}
-          />
-        </View>
-
-        {/* Pay Button */}
-        <TouchableOpacity style={styles.payButton} onPress={handlePayment}>
-          <Text style={styles.payButtonText}>Pay ${totalAmount.toFixed(2)}</Text>
+        <TouchableOpacity 
+          style={[styles.payButton, loading && styles.payButtonDisabled]} 
+          onPress={handlePayment}
+          disabled={loading || !cardComplete}
+        >
+          <Text style={styles.payButtonText}>
+            {loading ? 'Đang xử lý...' : `Thanh toán $${Number(totalAmount).toFixed(2)}`}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -173,6 +184,14 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  cardField: {
+    width: '100%',
+    height: 50,
+    marginVertical: 16,
+  },
+  payButtonDisabled: {
+    backgroundColor: '#A1DACD',
   },
 });
 

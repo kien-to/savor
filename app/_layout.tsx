@@ -32,7 +32,8 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <StripeProvider
-      publishableKey={process.env.PUBLISHABLE_KEY}
+      publishableKey={"pk_live_51KtHVXIv6VEkZcYaIHlJAmVeKkAyjmqifbBYHKz3L0arzHYAwvqElkW8s2n0aQm3pMU8QsmyduG1y64Vh5eu4FgZ006d0HjXDf"}
+        // process.env.PUBLISHABLE_KEY}
       merchantIdentifier="merchant.com.savor.app" // Optional for Apple Pay
     >
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

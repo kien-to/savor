@@ -16,31 +16,68 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 const PaymentScreen = () => {
   const stripe = useStripe();
   const router = useRouter();
-  const { storeId } = useLocalSearchParams();
+  const { 
+    storeId, 
+    storeTitle, 
+    price, 
+    pickUpTime, 
+    itemsLeft 
+  } = useLocalSearchParams();
+  
   const [quantity, setQuantity] = useState(1);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Payment Card');
   const [loading, setLoading] = useState(false);
 
-  const price = 5.99; // Price per item
-  const subtotal = price * quantity;
+  const subtotal = Number(price) * quantity;
 
   const handlePayment = async () => {
+    if (selectedPaymentMethod === 'Payment Card') {
+      router.push({
+        pathname: '/CreditCardScreen',
+        params: { totalAmount: subtotal }
+      });
+      return;
+    }
+
     try {
       setLoading(true);
-      
-      // Create payment intent
-      const { clientSecret } = await paymentService.createPaymentIntent(
+      // console.log("storeId", storeId);
+      // Create payment intent for all payment methods including Pay at Store
+      const { clientSecret, paymentIntentId } = await paymentService.createPaymentIntent(
         storeId.toString(),
         quantity,
         subtotal,
-        selectedPaymentMethod
+        selectedPaymentMethod,
+        pickUpTime.toString()
       );
 
-      // Handle different payment methods
+      if (selectedPaymentMethod === 'Pay at Store') {
+        // Use confirmPayAtStore instead of confirmPayment for Pay at Store
+        const { error } = await paymentService.confirmPayAtStore(paymentIntentId);
+        if (error) {
+          Alert.alert('Lỗi', 'Không thể xác nhận đơn hàng');
+          return;
+        }
+
+        Alert.alert(
+          'Xác nhận đơn hàng',
+          'Đơn hàng đã được đặt thành công. Vui lòng thanh toán tại cửa hàng khi nhận hàng.',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/(tabs)')
+            }
+          ]
+        );
+        return;
+      }
+
+      // Handle other payment methods
       if (selectedPaymentMethod === 'Apple Pay') {
         const { error: paymentError } = await stripe.handleNextAction(clientSecret);
         if (paymentError) {
+          console.log(paymentError);
           Alert.alert('Lỗi', 'Không thể xử lý thanh toán');
           return;
         }
@@ -84,55 +121,52 @@ const PaymentScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        {/* <TouchableOpacity style={styles.backButton}>
-          <Text style={styles.backText}>←</Text>
-        </TouchableOpacity> */}
-        <Text style={styles.headerTitle}>Theo Chocolate</Text>
+        <Text style={styles.headerTitle}>{storeTitle}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Pickup Information */}
         <View style={styles.pickupContainer}>
-          <Text style={styles.pickupBadge}>Pick up today</Text>
-          <Text style={styles.pickupTime}>1:45 PM - 8:40 PM</Text>
+          <Text style={styles.pickupBadge}>Nhận hàng hôm nay</Text>
+          <Text style={styles.pickupTime}>{pickUpTime}</Text>
         </View>
 
         {/* Payment Method */}
         <View style={styles.paymentMethodContainer}>
-          <Text style={styles.sectionTitle}>PAYMENT METHOD</Text>
+          <Text style={styles.sectionTitle}>PHƯƠNG THỨC THANH TOÁN</Text>
           <View style={styles.paymentMethod}>
             <Image
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Apple_Pay_logo.svg' }} // Apple Pay logo
+              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Apple_Pay_logo.svg' }}
               style={styles.paymentLogo}
             />
             <Text style={styles.paymentText}>{selectedPaymentMethod}</Text>
             <TouchableOpacity style={styles.editButton} onPress={openModal}>
-              <Text style={styles.editText}>Edit</Text>
+              <Text style={styles.editText}>Sửa</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Order Summary */}
         <View style={styles.orderSummaryContainer}>
-          <Text style={styles.sectionTitle}>ORDER SUMMARY</Text>
+          <Text style={styles.sectionTitle}>CHI TIẾT ĐƠN HÀNG</Text>
           <View style={styles.orderRow}>
-            <Text style={styles.orderText}>Subtotal</Text>
+            <Text style={styles.orderText}>Tạm tính</Text>
             <Text style={styles.orderText}>${subtotal.toFixed(2)}</Text>
           </View>
           <View style={styles.orderRow}>
-            <Text style={styles.orderText}>Sales taxes</Text>
+            <Text style={styles.orderText}>Thuế</Text>
             <Text style={styles.orderText}>$0.00</Text>
           </View>
           <View style={styles.orderRow}>
-            <Text style={styles.orderTotalText}>Total</Text>
+            <Text style={styles.orderTotalText}>Tổng cộng</Text>
             <Text style={styles.orderTotalText}>${subtotal.toFixed(2)}</Text>
           </View>
         </View>
 
         {/* Terms and Conditions */}
         <Text style={styles.termsText}>
-          By reserving this meal you agree to Too Good To Go's{' '}
-          <Text style={styles.linkText}>Terms and Conditions</Text>.
+          Bằng việc đặt món này, bạn đồng ý với{' '}
+          <Text style={styles.linkText}>Điều khoản và Điều kiện</Text>.
         </Text>
 
         {/* Quantity and Payment Button */}
@@ -147,13 +181,19 @@ const PaymentScreen = () => {
             <Text style={styles.quantityValue}>{quantity}</Text>
             <TouchableOpacity
               style={styles.quantityButton}
-              onPress={() => setQuantity(quantity + 1)}
+              onPress={() => setQuantity(Math.min(Number(itemsLeft), quantity + 1))}
             >
               <Text style={styles.quantityText}>+</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.payButton} onPress={handlePayment}>
-            <Text style={styles.payButtonText}>{selectedPaymentMethod}</Text>
+          <TouchableOpacity 
+            style={styles.payButton} 
+            onPress={handlePayment}
+            disabled={loading}
+          >
+            <Text style={styles.payButtonText}>
+              {loading ? 'Đang xử lý...' : 'Thanh toán'}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -167,20 +207,20 @@ const PaymentScreen = () => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select a payment method</Text>
+            <Text style={styles.modalTitle}>Chọn phương thức thanh toán</Text>
 
             {/* Payment Methods */}
             <TouchableOpacity
               style={styles.paymentOption}
               onPress={() => selectPaymentMethod('Payment Card')}
             >
-              <Text style={styles.paymentOptionText}>💳 Payment card</Text>
+              <Text style={styles.paymentOptionText}>💳 Thẻ thanh toán</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.paymentOption}
               onPress={() => selectPaymentMethod('Apple Pay')}
             >
-              <Text style={styles.paymentOptionText}> Apple Pay</Text>
+              <Text style={styles.paymentOptionText}> Apple Pay</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.paymentOption}
@@ -190,9 +230,9 @@ const PaymentScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.paymentOption}
-              onPress={() => selectPaymentMethod('Cash App Pay')}
+              onPress={() => selectPaymentMethod('Pay at Store')}
             >
-              <Text style={styles.paymentOptionText}>💵 Cash App Pay</Text>
+              <Text style={styles.paymentOptionText}>💵 Trả tiền tại cửa hàng</Text>
             </TouchableOpacity>
 
             {/* Close Button */}
