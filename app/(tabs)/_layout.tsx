@@ -35,6 +35,13 @@ export default function TabLayout() {
         }}
       /> */}
       <Tabs.Screen
+        name="home"
+        options={{
+          title: 'HomeScreen',
+          tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="login"
         options={{
           title: 'Login',
@@ -53,13 +60,6 @@ export default function TabLayout() {
         options={{
           title: 'Map',
           tabBarIcon: ({ color }) => <MaterialIcons name="map" size={28} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'HomeScreen',
-          tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
         }}
       />
       {/* <Tabs.Screen

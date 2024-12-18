@@ -70,7 +70,7 @@ const ProfileScreen = () => {
           {reservation.totalAmount.toFixed(2)}
         </Text>
         <Text style={styles.pickupTime}>
-          Pickup: {reservation.pickupTime ? reservation.pickupTime : 'Not scheduled'}
+          {reservation.pickupTime ? reservation.pickupTime : 'Not scheduled'}
         </Text>
         <Text
           style={[
@@ -106,7 +106,10 @@ const ProfileScreen = () => {
           />
           <Text style={styles.userName}>Kiên Tô</Text>
         </View>
-        <TouchableOpacity style={styles.settingsButton}>
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={() => router.push('/SettingsScreen')}
+        >
           <Text style={styles.settingsIcon}>⚙️</Text>
         </TouchableOpacity>
       </View>
