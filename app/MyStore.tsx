@@ -49,14 +49,14 @@ const MyStore = () => {
         </View>
 
         {/* How it works Video Section */}
-        <View style={styles.videoSection}>
+        {/* <View style={styles.videoSection}>
           <View style={styles.videoContainer}>
             <MaterialIcons name="play-circle-fill" size={50} color="#036B52" />
           </View>
           <Text style={styles.videoTitle}>
             HOW DOES{'\n'}TOO GOOD TO GO{'\n'}WORK?
           </Text>
-        </View>
+        </View> */}
       </ScrollView>
 
       {/* Bottom Navigation */}

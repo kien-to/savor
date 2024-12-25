@@ -33,6 +33,7 @@ const FavoritesScreen = () => {
       setLoading(true);
       setError(null);
       const data = await storeService.getFavorites();
+      // console.log('Favorites data:', data);
       setFavorites(data || []);
     } catch (err: any) {
       if (err.message.includes('User not authenticated')) {

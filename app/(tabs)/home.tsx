@@ -47,16 +47,28 @@ const HomeScreen = () => {
       }
 
       const location = await Location.getCurrentPositionAsync({});
-      const [homeDataResponse, favoritesResponse] = await Promise.all([
-        homeService.getHomePageData(
+      let homeDataResponse;
+      let favorites = [];  // Initialize empty array for favorites
+
+      try {
+        // Get home data
+        homeDataResponse = await homeService.getHomePageData(
           location.coords.latitude,
           location.coords.longitude
-        ),
-        storeService.getFavorites().catch(() => [])
-      ]);
+        );
+
+        // Get favorites - handle the response structure correctly
+        const favoritesResponse = await storeService.getFavorites();
+        favorites = favoritesResponse?.favorites || [];  // Extract favorites array or use empty array
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Continue with empty favorites if the call fails
+      }
 
       // Create a Set of favorite store IDs for quick lookup
-      const favoriteStoreIds = new Set((favoritesResponse || []).map(store => store.id));
+      const favoriteStoreIds = new Set(
+        favorites.map(store => store.id)
+      );
 
       // Ensure recommendedStores and pickUpTomorrow are arrays before mapping
       const recommendedStores = homeDataResponse?.recommendedStores || [];
@@ -269,9 +281,11 @@ const HomeScreen = () => {
     >
       <View style={styles.content}>
         <View style={styles.locationContainer}>
-          <Text style={styles.locationText}>📍 {homeData?.userLocation.city}</Text>
+          <Text style={styles.locationText}>
+            📍 {homeData?.userLocation?.city || 'Loading location...'}
+          </Text>
           <Text style={styles.distanceText}>
-            within {homeData?.userLocation.distance} mi
+            within {homeData?.userLocation?.distance || 0} mi
           </Text>
         </View>
 

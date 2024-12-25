@@ -101,7 +101,7 @@ export const storeService = {
 
       const data = await response.json();
       console.log('Received data:', data);
-      return data;
+      return data.favorites;
       
     } catch (error: any) {
       console.error('Detailed error:', {
