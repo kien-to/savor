@@ -53,7 +53,7 @@ const AccountDetailsScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
@@ -61,7 +61,7 @@ const AccountDetailsScreen = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="close" size={24} color="#000" />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Personal info</Text>

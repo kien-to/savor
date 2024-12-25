@@ -138,7 +138,7 @@ const AddBusinessDetailsScreen = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
@@ -146,7 +146,7 @@ const AddBusinessDetailsScreen = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="close" size={24} color="#000" />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <ScrollView 
         style={styles.content}

@@ -31,12 +31,12 @@ const SelectSurplusFoodScreen = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
+      {/* <TouchableOpacity 
         style={styles.closeButton}
         onPress={() => router.back()}
       >
         <MaterialIcons name="close" size={24} color="#000" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <ScrollView style={styles.content}>
         <Text style={styles.title}>

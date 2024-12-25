@@ -19,7 +19,7 @@ const AddSurplusFoodDetailsScreen = () => {
   const handleContinue = () => {
     if (name && description) {
       router.push({
-        pathname: '/SignUpStoreScreen',
+        pathname: '/SelectBagSizeScreen',
         params: { 
           category: params.category,
           bagName: name,
@@ -32,14 +32,14 @@ const AddSurplusFoodDetailsScreen = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="close" size={24} color="#000" />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <ScrollView style={styles.content}>
         <Text style={styles.title}>Add a name and a description</Text>
