@@ -90,6 +90,23 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" size={28} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="MyStore"
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="store" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="More"
+        options={{
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="more-horiz" size={24} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

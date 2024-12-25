@@ -43,18 +43,19 @@ const StoreListScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        {/* <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>←</Text>
-        </TouchableOpacity> */}
         <Text style={styles.title}>{title}</Text>
       </View>
-      <FlatList
-        data={stores}
-        renderItem={({ item }) => renderItem(item)}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.listContainer}
-      />
+      <View style={styles.listWrapper}>
+        <FlatList
+          data={stores}
+          renderItem={({ item }) => renderItem(item)}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={true}
+          ListFooterComponent={<View style={styles.listFooter} />}
+        />
+      </View>
     </View>
   );
 };
@@ -83,6 +84,10 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 8,
+    paddingBottom: 32,
+  },
+  listFooter: {
+    height: 32,
   },
   card: {
     flex: 1,
@@ -134,6 +139,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#036B52',
+  },
+  listWrapper: {
+    flex: 1,
   },
 });
 

@@ -15,6 +15,13 @@ const SignUpStoreScreen = () => {
   const router = useRouter();
   const [storeName, setStoreName] = useState('');
 
+  const handleManualEntry = () => {
+    router.push({
+      pathname: '/AddBusinessDetailsScreen',
+      params: { storeName }
+    });
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -60,6 +67,15 @@ const SignUpStoreScreen = () => {
             />
           </View>
 
+          {/* Manual Entry Button */}
+          <TouchableOpacity 
+            style={styles.manualEntryButton}
+            onPress={handleManualEntry}
+          >
+            <MaterialIcons name="add" size={24} color="#036B52" />
+            <Text style={styles.manualEntryText}>Add store details manually</Text>
+          </TouchableOpacity>
+
           {/* Terms and Continue Button */}
           <View style={styles.footer}>
             <Text style={styles.termsText}>
@@ -72,7 +88,8 @@ const SignUpStoreScreen = () => {
               style={[styles.continueButton, !storeName && styles.continueButtonDisabled]}
               disabled={!storeName}
               onPress={() => {
-                // Handle continue
+                // Handle continue with search
+                
               }}
             >
               <Text style={styles.continueButtonText}>Continue</Text>
@@ -202,6 +219,22 @@ const styles = StyleSheet.create({
   loginLinkText: {
     color: '#036B52',
     fontWeight: '500',
+  },
+  manualEntryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#036B52',
+    borderRadius: 8,
+    marginBottom: 24,
+  },
+  manualEntryText: {
+    color: '#036B52',
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
   },
 });
 

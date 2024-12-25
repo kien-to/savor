@@ -6,10 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
 import Slider from "@react-native-community/slider";
 import { homeService } from "../../services/home";
+import { geocodingService } from "../../services/geocoding";
 import { Store } from "../../types/store";
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
@@ -17,8 +20,8 @@ import * as Location from "expo-location";
 const LocationPickerScreen = () => {
   const router = useRouter();
   const [region, setRegion] = useState({
-    latitude: 37.7749,
-    longitude: -122.4194,
+    latitude: 0,
+    longitude: 0,
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   });
@@ -26,10 +29,54 @@ const LocationPickerScreen = () => {
   const [radius, setRadius] = useState(6);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<Array<{description: string}>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
-    fetchStores();
-  }, [region, radius]);
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    try {
+      setLoading(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          "Permission Required",
+          "Please enable location services to use this feature"
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const newRegion = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.1,
+        longitudeDelta: 0.1,
+      };
+
+      setRegion(newRegion);
+      await fetchStores();
+    } catch (error) {
+      console.error("Error getting location:", error);
+      Alert.alert(
+        "Location Error",
+        "Could not get your current location. Please check your device settings."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    getCurrentLocation();
+  };
 
   const fetchStores = async () => {
     try {
@@ -38,54 +85,45 @@ const LocationPickerScreen = () => {
         region.latitude,
         region.longitude
       );
-      console.log("API Response:", data);
-
+      
       const allStores = [
         ...data.recommendedStores,
         ...data.pickUpTomorrow,
       ].filter((store) => {
-        console.log(
-          "Store:",
-          store.title,
-          "Lat:",
-          store.latitude,
-          "Long:",
-          store.longitude
-        );
         return (
           typeof store.latitude === "number" &&
           typeof store.longitude === "number"
         );
       });
 
-      console.log("Filtered stores:", allStores);
       setStores(allStores);
     } catch (error) {
       console.error("Error fetching stores:", error);
+      Alert.alert("Error", "Failed to fetch stores");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUseCurrentLocation = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        alert("Permission to access location was denied");
-        return;
-      }
+  const handleSearch = async () => {
+    if (!searchText.trim()) return;
 
-      const location = await Location.getCurrentPositionAsync({});
+    try {
+      setSearchLoading(true);
+      const coordinates = await geocodingService.searchCity(searchText);
+      
       const newRegion = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.1,
-        longitudeDelta: 0.1,
+        ...region,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
       };
+      
       setRegion(newRegion);
     } catch (error) {
-      console.error("Error getting location:", error);
-      alert("Error getting current location");
+      console.error("Search error:", error);
+      Alert.alert("Error", "Could not find the specified location");
+    } finally {
+      setSearchLoading(false);
     }
   };
 
@@ -94,12 +132,44 @@ const LocationPickerScreen = () => {
     router.back();
   };
 
+  const handleSearchInputChange = async (text: string) => {
+    setSearchText(text);
+    if (text.length > 2) {
+      try {
+        const results = await geocodingService.getPlaceSuggestions(text);
+        setSuggestions(results);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+      }
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionSelect = async (suggestion: string) => {
+    setSearchText(suggestion);
+    setShowSuggestions(false);
+    try {
+      const coordinates = await geocodingService.searchCity(suggestion);
+      setRegion({
+        ...region,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      });
+    } catch (error) {
+      console.error('Error selecting suggestion:', error);
+      Alert.alert('Error', 'Could not find the specified location');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
         region={region}
-        onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
+        onRegionChangeComplete={setRegion}
       >
         <Marker
           coordinate={{
@@ -157,22 +227,33 @@ const LocationPickerScreen = () => {
           style={styles.searchInput}
           placeholder="Search for a city"
           value={searchText}
-          onChangeText={setSearchText}
-          onSubmitEditing={() => {
-            /* Implement geocoding */
-            console.log("Search text:", searchText);
-            fetchStores();
-            router.push({
-              pathname: "/StoreScreen",
-              params: { storeId: store.id },
-            });
-          }}
+          onChangeText={handleSearchInputChange}
         />
-        <TouchableOpacity
-          style={styles.useLocationButton}
+        {searchLoading ? (
+          <ActivityIndicator style={styles.searchIcon} color="#036B52" />
+        ) : (
+          <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+            <Text style={styles.searchButtonText}>Search</Text>
+          </TouchableOpacity>
+        )}
+        {showSuggestions && suggestions.length > 0 && (
+          <View style={styles.suggestionsContainer}>
+            {suggestions.map((suggestion, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.suggestionItem}
+                onPress={() => handleSuggestionSelect(suggestion.description)}
+              >
+                <Text style={styles.suggestionText}>{suggestion.description}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+        <TouchableOpacity 
+          style={styles.useLocationButton} 
           onPress={handleUseCurrentLocation}
         >
-          <Text style={styles.useLocationText}>Use my current location</Text>
+          <Text style={styles.useLocationText}>Use Current Location</Text>
         </TouchableOpacity>
       </View>
 
@@ -294,6 +375,44 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 12,
     marginTop: 2,
+  },
+  searchButton: {
+    backgroundColor: "#036B52",
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  searchButtonText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  searchIcon: {
+    marginLeft: 10,
+  },
+  suggestionsContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFF',
+    borderRadius: 5,
+    marginTop: 5,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 1000,
+  },
+  suggestionItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: '#333',
   },
 });
 
