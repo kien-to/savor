@@ -1,4 +1,5 @@
-// import { GOOGLE_MAPS_API_KEY } from '../type/s/env';
+import { GOOGLE_MAPS_API_KEY } from '../env';
+
 interface GeocodingResult {
   latitude: number;
   longitude: number;
@@ -15,7 +16,6 @@ export const geocodingService = {
     try {
       const address = `${street}, ${city}, ${state}, ${zipCode}, ${country}`;
       const encodedAddress = encodeURIComponent(address);
-      const GOOGLE_MAPS_API_KEY = "AIzaSyAvS7vyOpBGvCisds2DIWugoiYL7f6oaHE";
 
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${GOOGLE_MAPS_API_KEY}`
@@ -47,7 +47,6 @@ export const geocodingService = {
   }> {
     try {
       const encodedAddress = encodeURIComponent(searchText);
-      const GOOGLE_MAPS_API_KEY = "AIzaSyAvS7vyOpBGvCisds2DIWugoiYL7f6oaHE";
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${GOOGLE_MAPS_API_KEY}`
       );
@@ -71,7 +70,6 @@ export const geocodingService = {
 
   async getPlaceSuggestions(input: string): Promise<Array<{description: string, place_id: string}>> {
     try {
-      const GOOGLE_MAPS_API_KEY = "AIzaSyAvS7vyOpBGvCisds2DIWugoiYL7f6oaHE";
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=address&key=${GOOGLE_MAPS_API_KEY}`
       );
@@ -101,7 +99,6 @@ export const geocodingService = {
     country: string;
   }> {
     try {
-      const GOOGLE_MAPS_API_KEY = "AIzaSyAvS7vyOpBGvCisds2DIWugoiYL7f6oaHE";
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_MAPS_API_KEY}&fields=address_component`
       );
