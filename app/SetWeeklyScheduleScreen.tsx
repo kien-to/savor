@@ -38,6 +38,12 @@ const SetWeeklyScheduleScreen = () => {
     setSchedule(newSchedule);
   };
 
+  const updateTime = (index: number, field: 'startTime' | 'endTime', value: string) => {
+    const newSchedule = [...schedule];
+    newSchedule[index][field] = value;
+    setSchedule(newSchedule);
+  };
+
   // Calculate weekly earnings based on schedule and bag details
   const earnings = useMemo(() => {
     const bagSize = params.bagSize as string;
@@ -118,6 +124,7 @@ const SetWeeklyScheduleScreen = () => {
                     !day.enabled && styles.timeInputDisabled
                   ]}
                   value={day.startTime}
+                  onChangeText={(value) => updateTime(index, 'startTime', value)}
                   editable={day.enabled}
                 />
                 <Text style={styles.timeSeparator}>-</Text>
@@ -127,6 +134,7 @@ const SetWeeklyScheduleScreen = () => {
                     !day.enabled && styles.timeInputDisabled
                   ]}
                   value={day.endTime}
+                  onChangeText={(value) => updateTime(index, 'endTime', value)}
                   editable={day.enabled}
                 />
               </View>
