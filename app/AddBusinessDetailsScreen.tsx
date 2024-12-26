@@ -100,7 +100,18 @@ const AddBusinessDetailsScreen = () => {
     }
   };
 
+  const validateForm = () => {
+    if (!businessName || !storeType || !street || !city || 
+        !state || !zipCode || !country || !phone) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return false;
+    }
+    return true;
+  };
+
   const handleContinue = async () => {
+    if (!validateForm()) return;
+
     try {
       // Get coordinates from address
       const coordinates = await geocodingService.getCoordinates(

@@ -126,11 +126,11 @@ const FavoritesScreen = () => {
               <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardSubtitle}>{item.description}</Text>
-                <Text style={styles.pickUpTime}>{item.pickUpTime}</Text>
+                <Text style={styles.cardSubtitle}>{item.description || ''}</Text>
+                <Text style={styles.pickUpTime}>{item.pickUpTime || ''}</Text>
                 <View style={styles.cardFooter}>
                   <View style={styles.ratingContainer}>
-                    <Text style={styles.ratingText}>{item.rating}</Text>
+                    <Text style={styles.ratingText}>{item.rating || 0}</Text>
                     <Text style={styles.distanceText}>{item.distance}</Text>
                   </View>
                   <Text style={styles.price}>${item.price.toFixed(2)}</Text>

@@ -18,6 +18,19 @@ export interface StoreInfo {
   };
 }
 
+export interface BusinessDetails {
+  businessName: string;
+  storeType: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
+}
+
 export const myStoreService = {
   async getStoreInfo(): Promise<StoreInfo> {
     try {
@@ -76,6 +89,36 @@ export const myStoreService = {
       return await response.json();
     } catch (error) {
       console.error('Error updating store info:', error);
+      throw error;
+    }
+  },
+
+  async createStore(details: BusinessDetails): Promise<{ id: string }> {
+    try {
+      const currentUser = getAuth(firebase).currentUser;
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+
+      const idToken = await currentUser.getIdToken();
+      
+      const response = await fetch(`${API_URL}/api/store-management/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(details),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create store');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating store:', error);
       throw error;
     }
   }

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -16,6 +17,18 @@ const SignUpStoreScreen = () => {
   const [storeName, setStoreName] = useState('');
 
   const handleManualEntry = () => {
+    router.push({
+      pathname: '/AddBusinessDetailsScreen',
+      params: { storeName }
+    });
+  };
+
+  const handleContinue = () => {
+    if (!storeName.trim()) {
+      Alert.alert('Error', 'Please enter a store name');
+      return;
+    }
+    
     router.push({
       pathname: '/AddBusinessDetailsScreen',
       params: { storeName }
@@ -85,12 +98,9 @@ const SignUpStoreScreen = () => {
             </Text>
 
             <TouchableOpacity 
-              style={[styles.continueButton, !storeName && styles.continueButtonDisabled]}
-              disabled={!storeName}
-              onPress={() => {
-                // Handle continue with search
-                
-              }}
+              style={[styles.continueButton, !storeName.trim() && styles.continueButtonDisabled]}
+              disabled={!storeName.trim()}
+              onPress={handleContinue}
             >
               <Text style={styles.continueButtonText}>Continue</Text>
             </TouchableOpacity>

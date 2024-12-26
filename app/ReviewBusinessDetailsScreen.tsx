@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,37 +6,50 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
+import { myStoreService } from '../services/myStore';
 
 const ReviewBusinessDetailsScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
 
   const businessDetails = {
-    name: params.businessName || 'Savor',
-    type: params.storeType || 'Sushi restaurant',
-    address: params.street || '950 N Pleasant St',
-    city: params.city || 'Amherst',
-    state: params.state || 'MA',
-    zipCode: params.zipCode || '01002',
-    country: params.country || 'USA',
-    phone: params.phone || '+1 4132104239',
-    location: {
-      latitude: parseFloat(params.latitude as string) || 42.3867,
-      longitude: parseFloat(params.longitude as string) || -72.5301,
-    },
+    businessName: params.businessName as string,
+    storeType: params.storeType as string,
+    street: params.street as string,
+    city: params.city as string,
+    state: params.state as string,
+    zipCode: params.zipCode as string,
+    country: params.country as string,
+    phone: params.phone as string,
+    latitude: parseFloat(params.latitude as string),
+    longitude: parseFloat(params.longitude as string),
   };
 
   const handleEdit = () => {
     router.back(); // Go back to AddBusinessDetailsScreen
   };
 
-  const handleContinue = () => {
-    // Navigate to seller's home screen instead of SuccessScreen
-    router.replace('/(tabs)/MyStore');
+  const handleContinue = async () => {
+    try {
+      setIsLoading(true);
+      await myStoreService.createStore(businessDetails);
+      router.replace('/(tabs)/MyStore');
+    } catch (error) {
+      console.error('Error creating store:', error);
+      Alert.alert(
+        'Error',
+        'Failed to create store. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -63,16 +76,16 @@ const ReviewBusinessDetailsScreen = () => {
           <MapView
             style={styles.map}
             initialRegion={{
-              latitude: businessDetails.location.latitude,
-              longitude: businessDetails.location.longitude,
+              latitude: businessDetails.latitude,
+              longitude: businessDetails.longitude,
               latitudeDelta: 0.005,
               longitudeDelta: 0.005,
             }}
           >
             <Marker
               coordinate={{
-                latitude: businessDetails.location.latitude,
-                longitude: businessDetails.location.longitude,
+                latitude: businessDetails.latitude,
+                longitude: businessDetails.longitude,
               }}
             />
           </MapView>
@@ -88,12 +101,12 @@ const ReviewBusinessDetailsScreen = () => {
         {/* Business Details */}
         <View style={styles.detailsContainer}>
           <View style={styles.businessHeader}>
-            <Text style={styles.businessName}>{businessDetails.name}</Text>
-            <Text style={styles.businessType}>{businessDetails.type}</Text>
+            <Text style={styles.businessName}>{businessDetails.businessName}</Text>
+            <Text style={styles.businessType}>{businessDetails.storeType}</Text>
           </View>
 
           <Text style={styles.address}>
-            {`${businessDetails.address}, ${businessDetails.city}, ${businessDetails.state} ${businessDetails.zipCode}, ${businessDetails.country}`}
+            {`${businessDetails.street}, ${businessDetails.city}, ${businessDetails.state} ${businessDetails.zipCode}, ${businessDetails.country}`}
           </Text>
           
           <Text style={styles.phone}>{businessDetails.phone}</Text>
@@ -101,10 +114,18 @@ const ReviewBusinessDetailsScreen = () => {
 
         {/* Continue Button */}
         <TouchableOpacity 
-          style={styles.continueButton}
+          style={[
+            styles.continueButton,
+            isLoading && styles.continueButtonDisabled
+          ]}
           onPress={handleContinue}
+          disabled={isLoading}
         >
-          <Text style={styles.continueButtonText}>Continue</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.continueButtonText}>Continue</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -205,6 +226,9 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  continueButtonDisabled: {
+    backgroundColor: '#CCC',
   },
 });
 
