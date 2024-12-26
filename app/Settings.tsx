@@ -45,7 +45,7 @@ const Settings = () => {
           
           <View style={styles.detailItem}>
             <Text style={styles.label}>Name</Text>
-            <Text style={styles.value}>{storeInfo.name}</Text>
+            <Text style={styles.value}>{storeInfo.title}</Text>
           </View>
           
           <View style={styles.detailItem}>

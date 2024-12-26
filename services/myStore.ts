@@ -4,7 +4,7 @@ import firebase from '../config/firebase';
 
 export interface StoreInfo {
   id: string;
-  name: string;
+  title: string;
   type: string;
   address: string;
   city: string;
@@ -53,10 +53,10 @@ export const myStoreService = {
         throw new Error(error.error || 'Failed to fetch store info');
       }
 
-      console.log("my store response", response);
+    //   console.log("my store response", response);
       const data = await response.json();
       console.log("my store data", data);
-      return await response.json();
+      return data;
     } catch (error) {
       console.error('Error fetching store info:', error);
       throw error;
