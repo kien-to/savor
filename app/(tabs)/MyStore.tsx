@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,87 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 const MyStore = () => {
   const router = useRouter();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const DrawerMenu = () => (
+    <>
+      {isDrawerOpen && (
+        <TouchableOpacity 
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={() => setIsDrawerOpen(false)}
+        />
+      )}
+      <View style={[
+        styles.drawer,
+        isDrawerOpen ? styles.drawerOpen : styles.drawerClosed
+      ]}>
+        {/* Logo Section */}
+        <View style={styles.logoSection}>
+          <Image
+            source={require('../../assets/images/icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Store Profile */}
+        <View style={styles.profileSection}>
+          <View style={styles.profileInitial}>
+            <Text style={styles.initialText}>S</Text>
+          </View>
+          <Text style={styles.profileName}>Savor</Text>
+          <TouchableOpacity style={styles.menuOptions}>
+            <MaterialIcons name="more-vert" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Store Section */}
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>STORE</Text>
+          <TouchableOpacity style={styles.menuItem}>
+            <MaterialIcons name="dashboard" size={24} color="#000" />
+            <Text style={styles.menuItemText}>Dashboard</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <MaterialIcons name="insert-chart" size={24} color="#000" />
+            <Text style={styles.menuItemText}>Performance</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <MaterialIcons name="account-balance-wallet" size={24} color="#000" />
+            <Text style={styles.menuItemText}>Financials</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <MaterialIcons name="card-giftcard" size={24} color="#000" />
+            <Text style={styles.menuItemText}>Milestones</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => {
+              setIsDrawerOpen(false);
+              router.push('/Settings');
+            }}
+          >
+            <MaterialIcons name="settings" size={24} color="#036B52" />
+            <Text style={styles.menuItemText}>Settings</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Support Section */}
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>SUPPORT</Text>
+          <TouchableOpacity style={styles.menuItem}>
+            <MaterialIcons name="help" size={24} color="#000" />
+            <Text style={styles.menuItemText}>Help center</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <MaterialIcons name="card-giftcard" size={24} color="#000" />
+            <Text style={styles.menuItemText}>Earn 120USD</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </>
+  );
 
   const handleStartSelling = () => {
     router.push('/SelectSurplusFoodScreen');
@@ -20,9 +101,15 @@ const MyStore = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Menu and Notification Header */}
+      {/* Add Drawer Menu */}
+      <DrawerMenu />
+      
+      {/* Modify menu button to toggle drawer */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton}>
+        <TouchableOpacity 
+          style={styles.menuButton}
+          onPress={() => setIsDrawerOpen(!isDrawerOpen)}
+        >
           <MaterialIcons name="menu" size={24} color="#000" />
           <Text style={styles.menuText}>Menu</Text>
         </TouchableOpacity>
@@ -202,6 +289,91 @@ const styles = StyleSheet.create({
   navTextActive: {
     color: '#036B52',
     marginTop: 4,
+  },
+  drawer: {
+    position: 'absolute',
+    left: '-80%',
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#FFF',
+    width: '80%',
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  drawerOpen: {
+    left: 0,
+  },
+  drawerClosed: {
+    left: '-80%',
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
+  },
+  logoSection: {
+    padding: 16,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  logo: {
+    width: 120,
+    height: 40,
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  profileInitial: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#036B52',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  initialText: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  profileName: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  menuSection: {
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 16,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  menuItemText: {
+    marginLeft: 12,
+    fontSize: 16,
+  },
+  menuOptions: {
+    padding: 8,
   },
 });
 
