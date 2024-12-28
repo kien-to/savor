@@ -59,7 +59,7 @@ const HomeScreen = () => {
 
         // Get favorites - handle the response structure correctly
         const favoritesResponse = await storeService.getFavorites();
-        console.log('Favorites response:', favoritesResponse);
+        // console.log('Favorites response:', favoritesResponse);
         favorites = favoritesResponse || [];  // Extract favorites array or use empty array
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -89,7 +89,7 @@ const HomeScreen = () => {
       };
 
       setHomeData(updatedHomeData);
-      console.log('Home data:', updatedHomeData);
+      // console.log('Home data:', updatedHomeData);
     } catch (err) {
       setError('Failed to fetch home data');
       console.error(err);

@@ -30,6 +30,8 @@ const ReviewBusinessDetailsScreen = () => {
     phone: params.phone as string,
     latitude: parseFloat(params.latitude as string),
     longitude: parseFloat(params.longitude as string),
+    backgroundUrl: params.backgroundUrl as string,
+    imageUrl: params.imageUrl as string,
   };
 
   const handleEdit = () => {
@@ -110,6 +112,20 @@ const ReviewBusinessDetailsScreen = () => {
           </Text>
           
           <Text style={styles.phone}>{businessDetails.phone}</Text>
+        </View>
+
+        <View style={styles.imagesContainer}>
+          <Text style={styles.sectionTitle}>Store Images</Text>
+          <Image 
+            source={{ uri: params.backgroundUrl as string }} 
+            style={styles.previewImage}
+            resizeMode="cover"
+          />
+          <Image 
+            source={{ uri: params.imageUrl as string }} 
+            style={styles.previewImage}
+            resizeMode="cover"
+          />
         </View>
 
         {/* Continue Button */}
@@ -229,6 +245,20 @@ const styles = StyleSheet.create({
   },
   continueButtonDisabled: {
     backgroundColor: '#CCC',
+  },
+  imagesContainer: {
+    marginTop: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
   },
 });
 

@@ -50,6 +50,9 @@ const AddBusinessDetailsScreen = () => {
   const [zipCode, setZipCode] = useState('');
   const [city, setCity] = useState('');
   const [phone, setPhone] = useState('');
+  // Add after line 52
+  const [backgroundUrl, setBackgroundUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [state, setState] = useState('');
 
   // Add new state for address suggestions
@@ -102,7 +105,8 @@ const AddBusinessDetailsScreen = () => {
 
   const validateForm = () => {
     if (!businessName || !storeType || !street || !city || 
-        !state || !zipCode || !country || !phone) {
+        !state || !zipCode || !country || !phone ||
+        !backgroundUrl || !imageUrl) {
       Alert.alert('Error', 'Please fill in all required fields');
       return false;
     }
@@ -135,7 +139,9 @@ const AddBusinessDetailsScreen = () => {
           country,
           phone,
           latitude: coordinates.latitude,
-          longitude: coordinates.longitude
+          longitude: coordinates.longitude,
+          backgroundUrl,
+          imageUrl
         }
       });
     } catch (error) {
@@ -277,6 +283,24 @@ const AddBusinessDetailsScreen = () => {
             onChangeText={setPhone}
             placeholder="Enter phone number"
             keyboardType="phone-pad"
+          />
+
+          <Text style={styles.sectionTitle}>Store Images</Text>
+
+          <Text style={styles.label}>Background Image URL</Text>
+          <TextInput
+            style={styles.input}
+            value={backgroundUrl}
+            onChangeText={setBackgroundUrl}
+            placeholder="Enter background image URL"
+          />
+
+          <Text style={styles.label}>Store Image URL</Text>
+          <TextInput
+            style={styles.input}
+            value={imageUrl}
+            onChangeText={setImageUrl}
+            placeholder="Enter store image URL"
           />
         </View>
 
