@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { storeDetailsService } from '../services/storeDetails';
 
 const AddSurplusFoodDetailsScreen = () => {
   const router = useRouter();
@@ -16,16 +17,29 @@ const AddSurplusFoodDetailsScreen = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (name && description) {
-      router.push({
-        pathname: '/SelectBagSizeScreen',
-        params: { 
-          category: params.category,
-          bagName: name,
-          bagDescription: description
-        }
-      });
+      try {
+        await storeDetailsService.updateBagDetails({
+          category: params.category as string,
+          name,
+          description,
+          size: 'medium', // Will be updated in next screen
+          dailyCount: 3, // Will be updated in later screen
+        });
+        
+        router.push({
+          pathname: '/SelectBagSizeScreen',
+          params: { 
+            category: params.category,
+            bagName: name,
+            bagDescription: description
+          }
+        });
+      } catch (error) {
+        console.error('Failed to update bag details:', error);
+        // Add error handling UI
+      }
     }
   };
 

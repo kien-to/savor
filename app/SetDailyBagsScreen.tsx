@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { storeDetailsService } from '../services/storeDetails';
 
 const bagOptions = [
   { value: 2, recommended: false },
@@ -45,14 +46,26 @@ const SetDailyBagsScreen = () => {
     return `${dailyEarnings}USD`;
   }, [selectedCount, params.bagSize]);
 
-  const handleContinue = () => {
-    router.push({
-      pathname: '/SetWeeklyScheduleScreen',
-      params: {
-        ...params,
-        dailyBags: selectedCount,
-      },
-    });
+  const handleContinue = async () => {
+    try {
+      await storeDetailsService.updateBagDetails({
+        category: params.category as string,
+        name: params.name as string,
+        description: params.description as string,
+        size: params.bagSize as string,
+        dailyCount: selectedCount,
+      });
+      
+      router.push({
+        pathname: '/SetWeeklyScheduleScreen',
+        params: {
+          ...params,
+          dailyBags: selectedCount,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to update bag count:', error);
+    }
   };
 
   return (

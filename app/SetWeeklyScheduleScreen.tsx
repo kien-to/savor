@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import storeManagementService from '../services/storeManagementService';
 
 interface DaySchedule {
   day: string;
@@ -69,14 +70,28 @@ const SetWeeklyScheduleScreen = () => {
     };
   }, [schedule, params.bagSize, params.dailyBags]);
 
-  const handleContinue = () => {
-    router.push({
-      pathname: '/SetupSuccessScreen',
-      params: {
-        ...params,
-        schedule: JSON.stringify(schedule)
-      }
-    });
+  const handleContinue = async () => {
+    try {
+        await storeManagementService.updateSchedule(
+            schedule.map(s => ({
+                day: s.day,
+                enabled: s.enabled,
+                startTime: s.startTime,
+                endTime: s.endTime
+            }))
+        );
+        
+        router.push({
+            pathname: '/SetupSuccessScreen',
+            params: {
+                ...params,
+                schedule: JSON.stringify(schedule)
+            }
+        });
+    } catch (error) {
+        console.error('Failed to update schedule:', error);
+        // Add error handling UI
+    }
   };
 
   return (
