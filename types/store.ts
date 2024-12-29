@@ -17,4 +17,5 @@ export interface Store {
   isSaved?: boolean;
   latitude: number;
   longitude: number;
+  is_selling: boolean;
 } 

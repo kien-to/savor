@@ -43,6 +43,7 @@ const PaymentScreen = () => {
     try {
       setLoading(true);
       // console.log("storeId", storeId);
+      console.log("pickUpTime", pickUpTime);
       // Create payment intent for all payment methods including Pay at Store
       const { clientSecret, paymentIntentId } = await paymentService.createPaymentIntent(
         storeId.toString(),

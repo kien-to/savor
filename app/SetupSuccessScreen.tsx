@@ -8,12 +8,20 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { storeManagementService } from '../services/storeManagement';
 
 const SetupSuccessScreen = () => {
   const router = useRouter();
 
-  const handleStartSelling = () => {
-    router.push('/MyStore');
+  const handleStartSelling = async () => {
+    try {
+      // Enable selling for the store
+      await storeManagementService.toggleSelling(true);
+      router.push('/MyStore');
+    } catch (error) {
+      console.error('Failed to enable selling:', error);
+      // You might want to show an error message to the user
+    }
   };
 
   const handleMaybeLater = () => {
@@ -40,7 +48,7 @@ const SetupSuccessScreen = () => {
             style={styles.startButton}
             onPress={handleStartSelling}
           >
-            <Text style={styles.startButtonText}>Start selling</Text>
+            <Text style={styles.startButtonText}>Continue</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

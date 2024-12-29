@@ -158,5 +158,33 @@ export const storeManagementService = {
       console.error('Error updating schedule:', error);
       throw error;
     }
+  },
+
+  async toggleSelling(isSelling: boolean): Promise<void> {
+    try {
+      const currentUser = getAuth(firebase).currentUser;
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+
+      const idToken = await currentUser.getIdToken();
+      
+      const response = await fetch(`${API_URL}/api/store-management/toggle-selling`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_selling: isSelling }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update selling status');
+      }
+    } catch (error) {
+      console.error('Error toggling selling status:', error);
+      throw error;
+    }
   }
 }; 
