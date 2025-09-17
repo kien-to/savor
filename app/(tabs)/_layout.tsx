@@ -48,13 +48,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialIcons name="login" size={28} color={color} />,
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="favorite"
         options={{
           title: 'Favorites',
           tabBarIcon: ({ color }) => <MaterialIcons name="favorite" size={28} color={color} />,
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="map"
         options={{
@@ -90,7 +90,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" size={28} color={color} />,
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="MyStore"
         options={{
           headerShown: false,
@@ -98,15 +98,15 @@ export default function TabLayout() {
             <MaterialIcons name="store" size={24} color={color} />
           ),
         }}
-      />
-      <Tabs.Screen
+      /> */}
+      {/* <Tabs.Screen
         name="More"
         options={{
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="more-horiz" size={24} color={color} />
           ),
         }}
-      />
+      /> */}
     </Tabs>
   );
 }
