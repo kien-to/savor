@@ -4,6 +4,7 @@
 node_modules/
 .env
 env.ts
+package-lock.json
 
 # Expo
 .expo/
