@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import storeManagementService from '../services/storeManagementService';
+import { storeManagementService } from '../services/storeManagement';
 
 interface DaySchedule {
   day: string;
