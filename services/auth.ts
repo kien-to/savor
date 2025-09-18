@@ -24,7 +24,7 @@ interface ForgotPasswordInput {
   email: string;
 }
 
-const API_URL = 'http://localhost:8080'; // Change this to your server URL
+const API_URL = 'http://10.0.0.147:8080'; // Change this to your server URL
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {

@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'http://10.0.0.147:8080';
 // || process.env.EXPO_PUBLIC_API_URL;
 
 export const getStore = async (storeId: string) => {

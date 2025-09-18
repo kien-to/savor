@@ -27,13 +27,6 @@ export default function TabLayout() {
           default: {},
         }),
       }}>
-        {/* <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Index',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      /> */}
       <Tabs.Screen
         name="home"
         options={{
@@ -48,13 +41,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialIcons name="login" size={28} color={color} />,
         }}
       />
-      {/* <Tabs.Screen
-        name="favorite"
-        options={{
-          title: 'Favorites',
-          tabBarIcon: ({ color }) => <MaterialIcons name="favorite" size={28} color={color} />,
-        }}
-      /> */}
       <Tabs.Screen
         name="map"
         options={{
@@ -62,27 +48,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialIcons name="map" size={28} color={color} />,
         }}
       />
-      {/* <Tabs.Screen
-        name="store"
-        options={{
-          title: 'Store',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="tag.fill" color={color} />,
-        }}
-      /> */}
-      {/* <Tabs.Screen
-        name="payment"
-        options={{
-          title: 'Payment',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="tag.fill" color={color} />,
-        }}
-      /> */}
-      {/* <Tabs.Screen
-        name="browse"
-        options={{
-          title: 'Browse',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="tag.fill" color={color} />,
-        }}
-      /> */}
       <Tabs.Screen
         name="profile"
         options={{
@@ -90,23 +55,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" size={28} color={color} />,
         }}
       />
-      {/* <Tabs.Screen
-        name="MyStore"
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="store" size={24} color={color} />
-          ),
-        }}
-      /> */}
-      {/* <Tabs.Screen
-        name="More"
-        options={{
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="more-horiz" size={24} color={color} />
-          ),
-        }}
-      /> */}
     </Tabs>
   );
 }

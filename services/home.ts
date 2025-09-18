@@ -21,7 +21,7 @@ interface HomePageData {
   emailVerified: boolean;
 }
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'http://10.0.0.147:8080';
 
 export const homeService = {
   async getHomePageData(latitude: number, longitude: number): Promise<HomePageData> {
@@ -38,6 +38,7 @@ export const homeService = {
 
       if (!response.ok) {
         const error = await response.json();
+        console.log('API error:', error);
         throw new Error(error.error || 'Failed to fetch home data');
       }
 

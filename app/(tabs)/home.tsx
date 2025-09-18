@@ -48,7 +48,7 @@ const HomeScreen = () => {
 
       const location = await Location.getCurrentPositionAsync({});
       let homeDataResponse;
-      let favorites = [];  // Initialize empty array for favorites
+      // let favorites = [];  // Initialize empty array for favorites
 
       try {
         // Get home data
@@ -58,18 +58,19 @@ const HomeScreen = () => {
         );
 
         // Get favorites - handle the response structure correctly
-        const favoritesResponse = await storeService.getFavorites();
+        // const favoritesResponse = await storeService.getFavorites();
         // console.log('Favorites response:', favoritesResponse);
-        favorites = favoritesResponse || [];  // Extract favorites array or use empty array
+        // favorites = favoritesResponse || [];  // Extract favorites array or use empty array
       } catch (error) {
         console.error('Error fetching data:', error);
+        // console.log('Error fetching data 2:', error);
         // Continue with empty favorites if the call fails
       }
 
       // Create a Set of favorite store IDs for quick lookup
-      const favoriteStoreIds = new Set(
-        favorites.map(store => store.id)
-      );
+      // const favoriteStoreIds = new Set(
+      //   favorites.map(store => store.id)
+      // );
 
       // Ensure recommendedStores and pickUpTomorrow are arrays before mapping
       const recommendedStores = homeDataResponse?.recommendedStores || [];
@@ -80,11 +81,11 @@ const HomeScreen = () => {
         ...homeDataResponse,
         recommendedStores: recommendedStores.map(store => ({
           ...store,
-          isSaved: favoriteStoreIds.has(store.id)
+          // isSaved: favoriteStoreIds.has(store.id)
         })),
         pickUpTomorrow: pickUpTomorrow.map(store => ({
           ...store,
-          isSaved: favoriteStoreIds.has(store.id)
+          // isSaved: favoriteStoreIds.has(store.id)
         }))
       };
 
@@ -202,7 +203,7 @@ const HomeScreen = () => {
           source={{ uri: item.imageUrl }} 
           style={styles.cardImage} 
         />
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={styles.saveButton}
           onPress={(e) => {
             e.stopPropagation();
@@ -212,7 +213,7 @@ const HomeScreen = () => {
           <Text style={styles.saveIcon}>
             {item.isSaved ? '❤️' : '🤍'}
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.title}</Text>
