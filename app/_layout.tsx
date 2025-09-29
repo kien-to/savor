@@ -46,6 +46,7 @@ export default function RootLayout() {
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
           <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
               name="EmailScreen"
@@ -87,6 +88,48 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="AddBusinessDetailsScreen"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="StoreScreen"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="PaymentScreen"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ContactScreen"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="SignUpStoreScreen"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="AccountDetailsScreen"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="StoreListScreen"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="PhoneLoginScreen"
               options={{
                 headerShown: false,
               }}

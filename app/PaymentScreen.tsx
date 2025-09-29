@@ -12,6 +12,7 @@ import {
 import { useStripe } from '@stripe/stripe-react-native';
 import { paymentService } from '../services/payment';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Colors } from '../constants/Colors';
 
 const PaymentScreen = () => {
   const stripe = useStripe();
@@ -26,12 +27,14 @@ const PaymentScreen = () => {
   
   const [quantity, setQuantity] = useState(1);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Payment Card');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Pay at Store');
   const [loading, setLoading] = useState(false);
 
   const subtotal = Number(price) * quantity;
 
   const handlePayment = async () => {
+    // Only Pay at Store is available, so we can simplify the logic
+    /* Commented out other payment methods logic
     if (selectedPaymentMethod === 'Payment Card') {
       router.push({
         pathname: '/CreditCardScreen',
@@ -39,41 +42,40 @@ const PaymentScreen = () => {
       });
       return;
     }
+    */
 
     try {
       setLoading(true);
-      // console.log("storeId", storeId);
       console.log("pickUpTime", pickUpTime);
-      // Create payment intent for all payment methods including Pay at Store
+      
+      // Create payment intent for Pay at Store
       const { clientSecret, paymentIntentId } = await paymentService.createPaymentIntent(
         storeId.toString(),
         quantity,
         subtotal,
-        selectedPaymentMethod,
+        selectedPaymentMethod, // This will always be 'Pay at Store'
         pickUpTime.toString()
       );
 
-      if (selectedPaymentMethod === 'Pay at Store') {
-        // Use confirmPayAtStore instead of confirmPayment for Pay at Store
-        const { error } = await paymentService.confirmPayAtStore(paymentIntentId);
-        if (error) {
-          Alert.alert('Lỗi', 'Không thể xác nhận đơn hàng');
-          return;
-        }
-
-        Alert.alert(
-          'Xác nhận đơn hàng',
-          'Đơn hàng đã được đặt thành công. Vui lòng thanh toán tại cửa hàng khi nhận hàng.',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/(tabs)')
-            }
-          ]
-        );
+      // Use confirmPayAtStore for Pay at Store method
+      const { error } = await paymentService.confirmPayAtStore(paymentIntentId);
+      if (error) {
+        Alert.alert('Lỗi', 'Không thể xác nhận đơn hàng');
         return;
       }
 
+      Alert.alert(
+        'Xác nhận đơn hàng',
+        'Đơn hàng đã được đặt thành công. Vui lòng thanh toán tại cửa hàng khi nhận hàng.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)')
+          }
+        ]
+      );
+
+      /* Commented out other payment methods handling
       // Handle other payment methods
       if (selectedPaymentMethod === 'Apple Pay') {
         const { error: paymentError } = await stripe.handleNextAction(clientSecret);
@@ -97,6 +99,7 @@ const PaymentScreen = () => {
       // Payment successful
       Alert.alert('Thành công', 'Đặt hàng thành công!');
       router.replace('/(tabs)');
+      */
       
     } catch (error) {
       Alert.alert('Lỗi', 'Có lỗi xảy ra trong quá trình thanh toán');
@@ -122,7 +125,14 @@ const PaymentScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>{storeTitle}</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -136,11 +146,8 @@ const PaymentScreen = () => {
         <View style={styles.paymentMethodContainer}>
           <Text style={styles.sectionTitle}>PHƯƠNG THỨC THANH TOÁN</Text>
           <View style={styles.paymentMethod}>
-            <Image
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Apple_Pay_logo.svg' }}
-              style={styles.paymentLogo}
-            />
-            <Text style={styles.paymentText}>{selectedPaymentMethod}</Text>
+            <Text style={styles.paymentEmoji}>💵</Text>
+            <Text style={styles.paymentText}>Trả tiền tại cửa hàng</Text>
             <TouchableOpacity style={styles.editButton} onPress={openModal}>
               <Text style={styles.editText}>Sửa</Text>
             </TouchableOpacity>
@@ -211,6 +218,8 @@ const PaymentScreen = () => {
             <Text style={styles.modalTitle}>Chọn phương thức thanh toán</Text>
 
             {/* Payment Methods */}
+            {/* Commented out other payment methods - only Pay at Store is available */}
+            {/* 
             <TouchableOpacity
               style={styles.paymentOption}
               onPress={() => selectPaymentMethod('Payment Card')}
@@ -229,6 +238,7 @@ const PaymentScreen = () => {
             >
               <Text style={styles.paymentOptionText}>💸 PayPal</Text>
             </TouchableOpacity>
+            */}
             <TouchableOpacity
               style={styles.paymentOption}
               onPress={() => selectPaymentMethod('Pay at Store')}
@@ -250,27 +260,37 @@ const PaymentScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // paddingVertical: 70,
-    backgroundColor: '#FFF',
+    backgroundColor: Colors.light.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'space-between',
+    paddingTop: 60, // Safe area padding for status bar
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.light.background,
     borderBottomWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: Colors.light.border,
   },
   backButton: {
-    marginRight: 8,
+    padding: 8,
+    borderRadius: 8,
   },
-  backText: {
-    fontSize: 16,
-    color: '#036B52',
+  backIcon: {
+    fontSize: 24,
+    color: Colors.light.primary,
+    fontWeight: '600',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.light.text,
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 40, // Balance the back button
   },
   content: {
     padding: 16,
@@ -280,13 +300,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickupBadge: {
-    backgroundColor: '#036B52',
-    color: '#FFF',
-    paddingVertical: 4,
+    backgroundColor: Colors.light.primary,
+    color: Colors.light.accent,
+    paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 4,
+    borderRadius: 8,
     fontSize: 12,
     marginBottom: 4,
+    fontWeight: '600',
   },
   pickupTime: {
     fontSize: 14,
@@ -314,6 +335,10 @@ const styles = StyleSheet.create({
     height: 30,
     marginRight: 8,
   },
+  paymentEmoji: {
+    fontSize: 24,
+    marginRight: 8,
+  },
   paymentText: {
     fontSize: 14,
     flex: 1,
@@ -323,8 +348,9 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   editText: {
-    color: '#036B52',
+    color: Colors.light.primary,
     fontSize: 14,
+    fontWeight: '600',
   },
   modalContainer: {
     flex: 1,
@@ -414,15 +440,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   payButton: {
-    backgroundColor: '#000',
-    paddingVertical: 12,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   payButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: Colors.light.accent,
+    fontSize: 18,
+    fontWeight: '700',
   },  
 });
 

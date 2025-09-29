@@ -17,6 +17,10 @@ const SettingsScreen = () => {
     }
   };
 
+  const handleContact = () => {
+    router.push('/ContactScreen');
+  };
+
   const renderSettingsItem = (
     icon: React.ReactNode,
     title: string,
@@ -34,48 +38,28 @@ const SettingsScreen = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Manage account</Text>
+        <Text style={styles.headerTitle}>Quản lý tài khoản</Text>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="close" size={24} color="#000" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SETTINGS</Text>
+        <Text style={styles.sectionTitle}>CÀI ĐẶT</Text>
         {renderSettingsItem(
           <MaterialIcons name="person-outline" size={24} color="#000" />,
-          'Account details',
+          'Chi tiết tài khoản',
           () => {
             router.push('/AccountDetailsScreen');
           }
         )}
-        {/* {renderSettingsItem(
-          <MaterialIcons name="credit-card" size={24} color="#000" />,
-          'Payment cards',
-          () => {}
-        )} */}
-        {/* {renderSettingsItem(
-          <MaterialIcons name="local-offer" size={24} color="#000" />,
-          'Vouchers',
-          () => {}
-        )} */}
-        {renderSettingsItem(
-          <MaterialIcons name="notifications-none" size={24} color="#000" />,
-          'Notifications',
-          () => {}
-        )}
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>COMMUNITY</Text>
-        {renderSettingsItem(
-          <MaterialIcons name="store" size={24} color="#000" />,
-          'Recommend a store',
-          () => {}
-        )}
+        <Text style={styles.sectionTitle}>CỘNG ĐỒNG</Text>
         {renderSettingsItem(
           <MaterialCommunityIcons name="store-plus" size={24} color="#000" />,
-          'Sign up your store',
+          'Đăng ký cửa hàng',
           () => {
             router.push('/SignUpStoreScreen');
           }
@@ -83,40 +67,16 @@ const SettingsScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SUPPORT</Text>
-        {/* {renderSettingsItem(
-          <MaterialIcons name="shopping-bag" size={24} color="#000" />,
-          'Help with an order',
-          () => {}
-        )} */}
+        <Text style={styles.sectionTitle}>HỖ TRỢ</Text>
         {renderSettingsItem(
-          <MaterialIcons name="help-outline" size={24} color="#000" />,
-          'FAQs',
-          () => {}
+          <MaterialIcons name="phone" size={24} color="#000" />,
+          'Liên hệ',
+          handleContact
         )}
-        {/* {renderSettingsItem(
-          <MaterialIcons name="group" size={24} color="#000" />,
-          'Join Too Good To Go',
-          () => {}
-        )} */}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>OTHER</Text>
-        {/* {renderSettingsItem(
-          <MaterialIcons name="visibility-off" size={24} color="#000" />,
-          'Hidden stores',
-          () => {}
-        )} */}
-        {/* {renderSettingsItem(
-          <MaterialIcons name="gavel" size={24} color="#000" />,
-          'Legal',
-          () => {}
-        )} */}
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Log out</Text>
+        <Text style={styles.logoutText}>Đăng xuất</Text>
       </TouchableOpacity>
     </ScrollView>
   );

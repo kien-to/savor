@@ -1,26 +1,43 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Savor App Color Theme
+ * Consistent with web design
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const primaryGreen = '#004d3d';
+const lightCream = '#fff6e7';
+const accentGreen = '#036B52';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: '#333333',
+    background: lightCream,
+    tint: primaryGreen,
+    icon: '#666666',
+    tabIconDefault: '#666666',
+    tabIconSelected: primaryGreen,
+    primary: primaryGreen,
+    secondary: accentGreen,
+    accent: lightCream,
+    cardBackground: '#FFFFFF',
+    textSecondary: '#666666',
+    border: '#E0E0E0',
+    success: accentGreen,
+    price: accentGreen,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
+    text: lightCream,
+    background: primaryGreen,
+    tint: lightCream,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tabIconSelected: lightCream,
+    primary: primaryGreen,
+    secondary: accentGreen,
+    accent: lightCream,
+    cardBackground: '#1a1a1a',
+    textSecondary: '#999999',
+    border: '#333333',
+    success: accentGreen,
+    price: accentGreen,
   },
 };

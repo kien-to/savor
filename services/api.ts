@@ -1,27 +1,56 @@
-import * as SecureStore from 'expo-secure-store';
-
-const API_URL = 'http://10.0.0.147:8080';
-// || process.env.EXPO_PUBLIC_API_URL;
+import { API_URL } from '../config';
+import { getAuth } from 'firebase/auth';
+import firebase from '../config/firebase';
 
 export const getStore = async (storeId: string) => {
   try {
-    const token = await SecureStore.getItem('authToken');
-    // console.log('Actual token value:', token);
+    // storeId = "rc002"
+    console.log(`Fetching store with ID: ${storeId} from ${API_URL}/api/stores/${storeId}`);
     
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-    
-    const response = await fetch(`${API_URL}/api/stores/${storeId}`, {
+    // Try to get store details without authentication first (public info)
+    let response = await fetch(`${API_URL}/api/stores/${storeId}`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
+    });
+
+    // If public endpoint doesn't work, try with authentication
+    if (!response.ok && response.status === 401) {
+      console.log('Public store endpoint requires auth, trying with authentication...');
+      
+      const currentUser = getAuth(firebase).currentUser;
+      if (!currentUser) {
+        throw new Error('Store details require authentication, but user is not logged in');
+      }
+
+      // Get ID token with retry logic
+      let retries = 3;
+      let idToken = null;
+      
+      while (retries > 0 && !idToken) {
+        try {
+          idToken = await currentUser.getIdToken(true);  // Force refresh
+        } catch (error) {
+          console.log(`Failed to get ID token, retries left: ${retries - 1}`, error);
+          retries--;
+          if (retries === 0) throw error;
+          // Wait 1 second before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      response = await fetch(`${API_URL}/api/stores/${storeId}`, {
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
     }
-);
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`API Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
     
     return await response.json();

@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
   Alert,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -16,19 +17,33 @@ const SignUpStoreScreen = () => {
   const router = useRouter();
   const [storeName, setStoreName] = useState('');
 
-  const handleManualEntry = () => {
-    router.push({
-      pathname: '/AddBusinessDetailsScreen',
-      params: { storeName }
-    });
+  const handleDirectSignup = () => {
+    // Open Google Form for direct signup
+    Linking.openURL('https://docs.google.com/forms/d/e/1FAIpQLScRmhk8JMsbmhpkIz-6j-TW47BMBspwFnZD1AngXu84_oVNCA/viewform?usp=dialog');
   };
 
-  const handleContinue = () => {
-    if (!storeName.trim()) {
-      Alert.alert('Error', 'Please enter a store name');
-      return;
-    }
-    
+  const handleConsultation = () => {
+    Alert.alert(
+      'Contact for Consultation',
+      'How would you like to contact us for consultation?',
+      [
+        {
+          text: 'Phone',
+          onPress: () => Linking.openURL('tel:0964928175'),
+        },
+        {
+          text: 'Email',
+          onPress: () => Linking.openURL('mailto:kientrungto95@gmail.com'),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const handleManualEntry = () => {
     router.push({
       pathname: '/AddBusinessDetailsScreen',
       params: { storeName }
@@ -42,7 +57,7 @@ const SignUpStoreScreen = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sign up your store</Text>
+        <Text style={styles.headerTitle}>Đăng ký cửa hàng</Text>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="close" size={24} color="#000" />
         </TouchableOpacity>
@@ -55,60 +70,71 @@ const SignUpStoreScreen = () => {
             source={require('../assets/images/icon.png')}
             style={styles.heroImage}
           />
-          <TouchableOpacity style={styles.howItWorksButton}>
-            <MaterialIcons name="play-circle-filled" size={24} color="#036B52" />
-            <Text style={styles.howItWorksText}>How Too Good To Go works</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Main Content */}
         <View style={styles.mainContent}>
-          <Text style={styles.title}>Sign up your business</Text>
+          <Text style={styles.title}>Hợp tác với Savor</Text>
           <Text style={styles.subtitle}>
-            Let's find your store and get you started. It will only take a few minutes!
+            Tham gia Savor để giảm lãng phí thực phẩm và tăng doanh thu cửa hàng của bạn
           </Text>
 
-          {/* Search Input */}
-          <View style={styles.searchContainer}>
-            <MaterialIcons name="search" size={24} color="#666" style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search for your store's name"
-              value={storeName}
-              onChangeText={setStoreName}
-              placeholderTextColor="#666"
-            />
+          {/* Options Section */}
+          <View style={styles.optionsSection}>
+            <Text style={styles.optionsTitle}>Chọn cách bắt đầu</Text>
+            
+            <View style={styles.optionCards}>
+              <TouchableOpacity style={styles.primaryOptionCard} onPress={handleDirectSignup}>
+                <Text style={styles.optionEmoji}>🚀</Text>
+                <Text style={styles.primaryOptionTitle}>Đăng ký trực tiếp</Text>
+                <Text style={styles.optionDescription}>Bắt đầu ngay với cửa hàng của bạn</Text>
+                <View style={styles.primaryButton}>
+                  <Text style={styles.primaryButtonText}>Đăng ký ngay</Text>
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.secondaryOptionCard} onPress={handleConsultation}>
+                <Text style={styles.optionEmoji}>💬</Text>
+                <Text style={styles.secondaryOptionTitle}>Tư vấn & Hỏi đáp</Text>
+                <Text style={styles.optionDescription}>Có câu hỏi? Cần tư vấn thêm? Liên hệ với chúng tôi</Text>
+                <View style={styles.secondaryButton}>
+                  <Text style={styles.secondaryButtonText}>Liên hệ tư vấn</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Manual Entry Button */}
-          <TouchableOpacity 
-            style={styles.manualEntryButton}
-            onPress={handleManualEntry}
-          >
-            <MaterialIcons name="add" size={24} color="#036B52" />
-            <Text style={styles.manualEntryText}>Add store details manually</Text>
-          </TouchableOpacity>
+          {/* Benefits Section */}
+          <View style={styles.benefitsSection}>
+            <Text style={styles.benefitsTitle}>Tại sao hợp tác với Savor?</Text>
+            <View style={styles.benefits}>
+              <View style={styles.benefitItem}>
+                <Text style={styles.benefitEmoji}>🌱</Text>
+                <Text style={styles.benefitText}>Giảm lãng phí thức ăn</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <Text style={styles.benefitEmoji}>💰</Text>
+                <Text style={styles.benefitText}>Tăng doanh thu</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <Text style={styles.benefitEmoji}>🤝</Text>
+                <Text style={styles.benefitText}>Mở rộng khách hàng</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <Text style={styles.benefitEmoji}>🌍</Text>
+                <Text style={styles.benefitText}>Bảo vệ môi trường</Text>
+              </View>
+            </View>
+          </View>
 
-          {/* Terms and Continue Button */}
-          <View style={styles.footer}>
-            <Text style={styles.termsText}>
-              By proceeding, you agree to Too Good To Go's{' '}
-              <Text style={styles.linkText}>Privacy Policy</Text> and{' '}
-              <Text style={styles.linkText}>Terms and Conditions</Text>.
-            </Text>
-
-            <TouchableOpacity 
-              style={[styles.continueButton, !storeName.trim() && styles.continueButtonDisabled]}
-              disabled={!storeName.trim()}
-              onPress={handleContinue}
-            >
-              <Text style={styles.continueButtonText}>Continue</Text>
+          {/* Contact Info */}
+          <View style={styles.contactInfo}>
+            <Text style={styles.contactTitle}>Liên hệ trực tiếp</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('tel:0964928175')}>
+              <Text style={styles.contactText}>📞 Phone: 0964928175</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.loginLink}>
-              <Text style={styles.loginText}>
-                Already have a store account? <Text style={styles.loginLinkText}>Log in</Text>
-              </Text>
+            <TouchableOpacity onPress={() => Linking.openURL('mailto:kientrungto95@gmail.com')}>
+              <Text style={styles.contactText}>✉️ Email: kientrungto95@gmail.com</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -127,7 +153,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    // paddingTop: 60,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
@@ -146,21 +171,6 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'cover',
   },
-  howItWorksButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    backgroundColor: '#FFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 20,
-  },
-  howItWorksText: {
-    color: '#036B52',
-    marginLeft: 4,
-    fontWeight: '500',
-  },
   mainContent: {
     padding: 16,
   },
@@ -168,83 +178,131 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 24,
+    marginBottom: 32,
+    textAlign: 'center',
   },
-  searchContainer: {
-    flexDirection: 'row',
+  optionsSection: {
+    marginBottom: 32,
+  },
+  optionsTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  optionCards: {
+    gap: 16,
+  },
+  primaryOptionCard: {
+    backgroundColor: '#036B52',
+    borderRadius: 12,
+    padding: 20,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 24,
   },
-  searchIcon: {
-    marginRight: 8,
+  secondaryOptionCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#036B52',
   },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
+  optionEmoji: {
+    fontSize: 32,
+    marginBottom: 8,
   },
-  footer: {
-    marginTop: 'auto',
+  primaryOptionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFF',
+    marginBottom: 8,
   },
-  termsText: {
+  secondaryOptionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#036B52',
+    marginBottom: 8,
+  },
+  optionDescription: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 16,
   },
-  linkText: {
-    color: '#036B52',
-  },
-  continueButton: {
-    backgroundColor: '#036B52',
-    paddingVertical: 16,
+  primaryButton: {
+    backgroundColor: '#FFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 16,
   },
-  continueButtonDisabled: {
-    backgroundColor: '#E0E0E0',
-  },
-  continueButtonText: {
-    color: '#FFF',
-    fontSize: 16,
+  primaryButtonText: {
+    color: '#036B52',
     fontWeight: '600',
+    fontSize: 14,
   },
-  loginLink: {
-    alignItems: 'center',
+  secondaryButton: {
+    backgroundColor: '#036B52',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  secondaryButtonText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  benefitsSection: {
     marginBottom: 32,
   },
-  loginText: {
-    fontSize: 14,
-    color: '#666',
+  benefitsTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  loginLinkText: {
-    color: '#036B52',
-    fontWeight: '500',
-  },
-  manualEntryButton: {
+  benefits: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#036B52',
-    borderRadius: 8,
-    marginBottom: 24,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  manualEntryText: {
-    color: '#036B52',
-    fontSize: 16,
+  benefitItem: {
+    width: '48%',
+    alignItems: 'center',
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 8,
+  },
+  benefitEmoji: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  benefitText: {
+    fontSize: 14,
+    textAlign: 'center',
     fontWeight: '500',
-    marginLeft: 8,
+  },
+  contactInfo: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 32,
+  },
+  contactTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  contactText: {
+    fontSize: 14,
+    color: '#036B52',
+    marginBottom: 8,
+    textAlign: 'center',
   },
 });
 

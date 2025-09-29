@@ -4,6 +4,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Platform } from
 import * as Google from 'expo-auth-session/providers/google';
 import { socialAuthService, googleConfig } from "../../services/socialAuth";
 import { useAuth } from "../../context/AuthContext";
+import { Colors } from "../../constants/Colors";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -83,13 +84,13 @@ export default function LoginScreen() {
         <Text style={styles.buttonText}>Continue with Facebook</Text>
       </TouchableOpacity> */}
 
-      {/* <TouchableOpacity
+      <TouchableOpacity
         style={[styles.button, styles.phoneButton]}
-        onPress={() => router.push("/(auth)/phone-login")}
+        onPress={() => router.push("/PhoneLoginScreen")}
         disabled={loading}
       >
-        <Text style={styles.buttonText}>Continue with Phone</Text>
-      </TouchableOpacity> */}
+        <Text style={styles.buttonText}>Tiếp tục với số điện thoại</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.button, styles.emailButton]}
@@ -105,17 +106,18 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F8F8",
+    backgroundColor: Colors.light.background,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
   },
   headerText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#3C3C3C",
+    fontSize: 28,
+    fontWeight: "700",
+    color: Colors.light.primary,
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 40,
+    lineHeight: 36,
   },
   image: {
     width: 150,
@@ -125,10 +127,15 @@ const styles = StyleSheet.create({
   },
   button: {
     width: "100%",
-    paddingVertical: 15,
-    borderRadius: 25,
+    paddingVertical: 18,
+    borderRadius: 12,
     alignItems: "center",
     marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   googleButton: {
     backgroundColor: "#DB4437",
@@ -137,15 +144,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#1877F2",
   },
   emailButton: {
-    backgroundColor: "#036B52",
+    backgroundColor: Colors.light.primary,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: Colors.light.accent,
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   loginButton: {
-    backgroundColor: "#036B52",
+    backgroundColor: Colors.light.primary,
   },
   phoneButton: {
     backgroundColor: "#34B7F1",

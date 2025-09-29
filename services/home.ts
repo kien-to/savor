@@ -1,3 +1,5 @@
+import { API_URL } from '../config';
+
 interface Store {
   longitude: any;
   latitude: any;
@@ -20,8 +22,6 @@ interface HomePageData {
   pickUpTomorrow: Store[];
   emailVerified: boolean;
 }
-
-const API_URL = 'http://10.0.0.147:8080';
 
 export const homeService = {
   async getHomePageData(latitude: number, longitude: number): Promise<HomePageData> {

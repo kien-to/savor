@@ -8,9 +8,13 @@ import {
   ScrollView,
   RefreshControl,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { reservationService, Reservation } from "../../services/reservations";
 import { useRouter } from "expo-router";
+import { Colors } from "../../constants/Colors";
+import { MaterialIcons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
 // import { format } from "date-fns";
 
 const ProfileScreen = () => {
@@ -19,6 +23,7 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { logout, token } = useAuth();
 
   const fetchReservations = async () => {
     try {
@@ -48,52 +53,118 @@ const ProfileScreen = () => {
     fetchReservations();
   }, []);
 
+  const handleRemoveReservation = useCallback((reservationId: string, storeName: string) => {
+    Alert.alert(
+      'Xóa đặt chỗ',
+      `Bạn có chắc chắn muốn xóa đặt chỗ tại ${storeName}?`,
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Remove from local state immediately for better UX
+              setReservations(prev => prev.filter(r => r.id !== reservationId));
+              
+              // Here you would call an API to actually delete the reservation
+              // await reservationService.deleteReservation(reservationId);
+              
+              Alert.alert('Thành công', 'Đã xóa đặt chỗ thành công');
+            } catch (error) {
+              console.error('Error removing reservation:', error);
+              // Restore the reservation if the API call fails
+              fetchReservations();
+              Alert.alert('Lỗi', 'Không thể xóa đặt chỗ. Vui lòng thử lại.');
+            }
+          },
+        },
+      ]
+    );
+  }, [fetchReservations]);
+
+  const handleLogout = useCallback(async () => {
+    Alert.alert(
+      'Đăng xuất',
+      'Bạn có chắc chắn muốn đăng xuất?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Đăng xuất',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            // The tab layout will automatically show the login tab when token becomes null
+          },
+        },
+      ]
+    );
+  }, [logout]);
+
   const renderReservationCard = (reservation: Reservation) => (
-    <TouchableOpacity
-      key={reservation.id}
-      style={styles.reservationCard}
-      onPress={() => {
-        router.push({
-          pathname: "/StoreScreen",
-          params: { storeId: reservation.storeId },
-        });
-      }}
-    >
-      <Image
-        source={{ uri: reservation.storeImage }}
-        style={styles.storeImage}
-      />
-      <View style={styles.reservationInfo}>
-        <Text style={styles.storeName}>{reservation.storeName}</Text>
-        <Text style={styles.reservationDetails}>
-          Quantity: {reservation.quantity} • $
-          {reservation.totalAmount.toFixed(2)}
-        </Text>
-        <Text style={styles.pickupTime}>
-          {reservation.pickupTime ? reservation.pickupTime : 'Not scheduled'}
-        </Text>
-        <Text
-          style={[
-            styles.status,
-            { color: reservation.status === "confirmed" ? "#425e57" : "#666" },
-          ]}
+    <View key={reservation.id} style={styles.reservationCardContainer}>
+      <TouchableOpacity
+        style={styles.reservationCard}
+        onPress={() => {
+          router.push({
+            pathname: "/StoreScreen",
+            params: { storeId: reservation.storeId },
+          });
+        }}
+      >
+        <Image
+          source={{ uri: reservation.storeImage }}
+          style={styles.storeImage}
+        />
+        <View style={styles.reservationInfo}>
+          <Text style={styles.storeName}>{reservation.storeName}</Text>
+          <Text style={styles.reservationDetails}>
+            Số lượng: {reservation.quantity} • $
+            {reservation.totalAmount.toFixed(2)}
+          </Text>
+          <Text style={styles.pickupTime}>
+            {reservation.pickupTime ? reservation.pickupTime : 'Chưa lên lịch'}
+          </Text>
+          <Text
+            style={[
+              styles.status,
+              { color: reservation.status === "confirmed" ? "#425e57" : "#666" },
+            ]}
+          >
+            {reservation.status === "confirmed" ? "Đã xác nhận" : 
+             reservation.status === "pending" ? "Đang chờ" : 
+             reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.removeButtonCorner}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleRemoveReservation(reservation.id, reservation.storeName);
+          }}
         >
-          {reservation.status.charAt(0).toUpperCase() +
-            reservation.status.slice(1)}
-        </Text>
-      </View>
-    </TouchableOpacity>
+          <MaterialIcons name="close" size={20} color="#FF4444" />
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={styles.scrollContent}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={["#036B52"]}
-          tintColor="#036B52"
+          colors={[Colors.light.primary]}
+          tintColor={Colors.light.primary}
         />
       }
     >
@@ -106,30 +177,40 @@ const ProfileScreen = () => {
           />
           <Text style={styles.userName}>Kiên Tô</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.settingsButton}
-          onPress={() => router.push('/SettingsScreen')}
-        >
-          <Text style={styles.settingsIcon}>⚙️</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          {token && (
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <MaterialIcons name="logout" size={20} color={Colors.light.accent} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => router.push('/SettingsScreen')}
+          >
+            <Text style={styles.settingsIcon}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Orders Section */}
       <View style={styles.ordersSection}>
         {loading ? (
-          <ActivityIndicator color="#036B52" size="large" />
+          <ActivityIndicator color={Colors.light.primary} size="large" />
         ) : error ? (
           <Text style={styles.errorText}>{error}</Text>
         ) : (reservations?.length ?? 0) === 0 ? (
           <>
             <Text style={styles.ordersText}>
-              You don't have any orders yet.
+              Bạn chưa có đơn hàng nào.
             </Text>
             <TouchableOpacity
               style={styles.findButton}
               onPress={() => router.push("/")}
             >
-              <Text style={styles.findButtonText}>Find a Surprise Bag</Text>
+              <Text style={styles.findButtonText}>Tìm túi bất ngờ</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -145,7 +226,7 @@ const ProfileScreen = () => {
           <Text style={styles.statValue}>
             {reservations?.reduce((sum, res) => sum + res.quantity, 0) ?? 0}
           </Text>
-          <Text style={styles.statLabel}>Orders made</Text>
+          <Text style={styles.statLabel}>Đơn hàng đã đặt</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>
@@ -154,7 +235,7 @@ const ProfileScreen = () => {
               reservations?.reduce((sum, res) => sum + res.totalAmount, 0) ?? 0
             ).toFixed(2)}
           </Text>
-          <Text style={styles.statLabel}>Money saved</Text>
+          <Text style={styles.statLabel}>Tiền đã tiết kiệm</Text>
         </View>
       </View>
 
@@ -167,19 +248,27 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  scrollContent: {
     paddingVertical: 60,
-    backgroundColor: "#FFF",
     padding: 16,
+    paddingBottom: 120, // Extra padding for tab bar and safe scrolling
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 16,
-    backgroundColor: "#036B52",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingVertical: 20,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   userInfo: {
     flexDirection: "row",
@@ -192,16 +281,28 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFF",
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.light.accent,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoutButton: {
+    backgroundColor: '#FF4444',
+    padding: 8,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   settingsButton: {
     padding: 8,
   },
   settingsIcon: {
-    fontSize: 18,
-    color: "#FFF",
+    fontSize: 20,
+    color: Colors.light.accent,
   },
   ordersSection: {
     alignItems: "center",
@@ -217,14 +318,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   findButton: {
-    backgroundColor: "#036B52",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   findButtonText: {
-    color: "#FFF",
-    fontSize: 14,
+    color: Colors.light.accent,
+    fontSize: 16,
     fontWeight: "600",
   },
   statsContainer: {
@@ -243,9 +349,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#036B52",
+    fontSize: 28,
+    fontWeight: "700",
+    color: Colors.light.primary,
     marginBottom: 8,
   },
   statLabel: {
@@ -266,17 +372,36 @@ const styles = StyleSheet.create({
   reservationsList: {
     width: "100%",
   },
+  reservationCardContainer: {
+    marginBottom: 12,
+  },
   reservationCard: {
+    position: "relative",
     flexDirection: "row",
     backgroundColor: "#FFF",
     borderRadius: 8,
     padding: 12,
-    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  removeButtonCorner: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
   storeImage: {
     width: 80,

@@ -11,7 +11,8 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState, useCallback } from 'react';
 import { getStore } from '../services/api';
-import { storeService } from '../services/store';
+import { Colors } from '../constants/Colors';
+// import { storeService } from '../services/store';
 
 // Add interface for store data
 interface StoreData {
@@ -37,7 +38,7 @@ const StoreDetailScreen = () => {
   const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
+  // const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -45,24 +46,29 @@ const StoreDetailScreen = () => {
         setLoading(true);
         setError(null);
 
-        console.log("storeId in here", storeId);
+        console.log("StoreScreen - storeId received:", storeId);
+        console.log("StoreScreen - storeId type:", typeof storeId);
+        
+        if (!storeId) {
+          throw new Error('No store ID provided');
+        }
         // Fetch both store data and favorites simultaneously
-        const [storeData, favorites] = await Promise.all([
+        const [storeData] = await Promise.all([
           getStore(storeId.toString()),
-          storeService.getFavorites().catch(() => [])
+          // storeService.getFavorites().catch(() => [])
         ]);
 
         // Check if this store is in favorites
-        const isFavorite = (favorites || []).some(favorite => favorite.id === storeData.id);
+        // const isFavorite = (favorites || []).some(favorite => favorite.id === storeData.id);
         
         // Update store data with correct saved status
         const updatedStoreData = {
           ...storeData,
-          isSaved: isFavorite
+          // isSaved: isFavorite
         };
 
         setStoreData(updatedStoreData);
-        setIsSaved(isFavorite);
+        // setIsSaved(isFavorite);
       } catch (error) {
         setError('Failed to load store details. Please try again later.');
         console.error('Error fetching store data:', error);
@@ -74,20 +80,20 @@ const StoreDetailScreen = () => {
     fetchStore();
   }, [storeId]);
 
-  const toggleSave = useCallback(async () => {
-    try {
-      if (!storeData?.id) return;
+  // const toggleSave = useCallback(async () => {
+  //   try {
+  //     if (!storeData?.id) return;
       
-      const newSavedState = await storeService.toggleSave(storeData.id);
-      setIsSaved(newSavedState);
-    } catch (error) {
-      console.error('Failed to toggle save:', error);
-      // Optionally show an error message to the user
-    }
-  }, [storeData?.id]);
+  //     const newSavedState = await storeService.toggleSave(storeData.id);
+  //     setIsSaved(newSavedState);
+  //   } catch (error) {
+  //     console.error('Failed to toggle save:', error);
+  //     // Optionally show an error message to the user
+  //   }
+  // }, [storeData?.id]);
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#036B52" />;
+    return <ActivityIndicator size="large" color={Colors.light.primary} />;
   }
 
   if (error) {
@@ -106,20 +112,27 @@ const StoreDetailScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButtonOverlay}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.backIconOverlay}>←</Text>
+      </TouchableOpacity>
       
       <View style={styles.headerContainer}>
         <Image
           source={{ uri: storeData?.backgroundUrl }}
           style={styles.backgroundImage}
         />
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={styles.saveButton}
           onPress={toggleSave}
         >
           <Text style={styles.saveIcon}>
             {isSaved ? '❤️' : '🤍'}
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <View style={styles.avaContainer}>
           <View style={styles.badge}>
@@ -142,17 +155,17 @@ const StoreDetailScreen = () => {
         {/* Store Info */}
         <View style={styles.storeInfoContainer}>
           <Text style={styles.storeTitle}>{storeData?.title}</Text>
-          <Text style={styles.storeSubtitle}>Surprise Bag</Text>
+          <Text style={styles.storeSubtitle}>Túi bất ngờ</Text>
           <View style={styles.ratingContainer}>
             <Text style={styles.ratingText}>
-              {storeData?.rating} ({storeData?.reviews})
+              ⭐ {storeData?.rating} ({storeData?.reviews} đánh giá)
             </Text>
           </View>
           <Text style={styles.pickUpTime}>
-            Pick up: {storeData?.pickUpTime}
+            🕐 Nhận hàng: {storeData?.pickUpTime}
           </Text>
           <TouchableOpacity style={styles.todayBadge}>
-            <Text style={styles.todayText}>Today</Text>
+            <Text style={styles.todayText}>Hôm nay</Text>
           </TouchableOpacity>
           <View style={styles.priceContainer}>
             <Text style={styles.originalPrice}>
@@ -166,8 +179,8 @@ const StoreDetailScreen = () => {
 
         {/* Address */}
         <TouchableOpacity style={styles.addressContainer}>
-          <Text style={styles.addressText}>{storeData?.address}</Text>
-          <Text style={styles.moreInfoText}>More information about the store</Text>
+          <Text style={styles.addressText}>📍 {storeData?.address}</Text>
+          <Text style={styles.moreInfoText}>Thêm thông tin về cửa hàng</Text>
         </TouchableOpacity>
 
         {/* Description */}
@@ -242,7 +255,7 @@ const getEmojiForHighlight = (highlight: string): string => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: Colors.light.background,
   },
   headerImage: {
     width: '100%',
@@ -260,15 +273,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   storeTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.light.text,
+    marginBottom: 8,
   },
   storeSubtitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
+    color: Colors.light.textSecondary,
+    marginBottom: 12,
+    fontWeight: '500',
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -276,24 +290,28 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   ratingText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: Colors.light.textSecondary,
+    fontWeight: '500',
   },
   pickUpTime: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: Colors.light.textSecondary,
+    fontWeight: '500',
+    marginBottom: 8,
   },
   todayBadge: {
-    backgroundColor: '#036B52',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
     marginTop: 8,
     alignSelf: 'flex-start',
   },
   todayText: {
-    color: '#FFF',
+    color: Colors.light.accent,
     fontSize: 12,
+    fontWeight: '600',
   },
   priceContainer: {
     flexDirection: 'row',
@@ -307,9 +325,9 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   currentPrice: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#036B52',
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.light.primary,
   },
   addressContainer: {
     borderTopWidth: 1,
@@ -384,21 +402,47 @@ const styles = StyleSheet.create({
   },
   reserveButtonContainer: {
     position: 'absolute',
-    bottom: 70,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFF',
-    padding: 16,
+    bottom: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: 'transparent',
   },
   reserveButton: {
-    backgroundColor: '#036B52',
-    paddingVertical: 16,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 18,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   reserveButtonText: {
-    color: '#FFF',
+    color: Colors.light.accent,
     fontSize: 18,
+    fontWeight: '700',
+  },
+  backButtonOverlay: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  backIconOverlay: {
+    fontSize: 20,
+    color: Colors.light.primary,
     fontWeight: '600',
   },
   headerContainer: {

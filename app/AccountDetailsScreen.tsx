@@ -22,19 +22,19 @@ const AccountDetailsScreen = () => {
   const user = auth.currentUser;
 
   const personalInfo: AccountDetailItem[] = [
-    { label: 'Name', value: user?.displayName || 'Not set' },
-    { label: 'Email', value: user?.email || 'Not set' },
-    { label: 'Phone number', value: user?.phoneNumber || 'Not set', optional: true },
-    { label: 'Country', value: 'United States' },
-    { label: 'Gender', value: 'Not set', optional: true },
-    { label: 'Dietary preferences', value: 'Not set', optional: true },
-    { label: 'Birthday', value: 'Not set' },
+    { label: 'Tên', value: user?.displayName || 'Chưa cài đặt' },
+    { label: 'Email', value: user?.email || 'Chưa cài đặt' },
+    { label: 'Số điện thoại', value: user?.phoneNumber || 'Chưa cài đặt', optional: true },
+    { label: 'Quốc gia', value: 'Việt Nam' },
+    { label: 'Giới tính', value: 'Chưa cài đặt', optional: true },
+    { label: 'Sở thích ăn uống', value: 'Chưa cài đặt', optional: true },
+    { label: 'Ngày sinh', value: 'Chưa cài đặt' },
   ];
 
   const locations = [
-    { label: 'Home', value: 'Not set' },
-    { label: 'Work', value: 'Not set' },
-    { label: 'Other', value: 'Not set' },
+    { label: 'Nhà', value: 'Chưa cài đặt' },
+    { label: 'Công ty', value: 'Chưa cài đặt' },
+    { label: 'Khác', value: 'Chưa cài đặt' },
   ];
 
   const renderDetailItem = (item: AccountDetailItem) => (
@@ -44,7 +44,7 @@ const AccountDetailsScreen = () => {
       </View>
       <View style={styles.valueContainer}>
         <Text style={styles.value}>
-          {item.optional && !item.value ? '(optional)' : item.value}
+          {item.optional && !item.value ? '(tùy chọn)' : item.value}
         </Text>
         <MaterialIcons name="chevron-right" size={24} color="#666" />
       </View>
@@ -64,12 +64,12 @@ const AccountDetailsScreen = () => {
       </View> */}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Personal info</Text>
+        <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
         {personalInfo.map(renderDetailItem)}
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>My locations</Text>
+        <Text style={styles.sectionTitle}>Địa chỉ của tôi</Text>
         {locations.map(location => renderDetailItem({
           label: location.label,
           value: location.value

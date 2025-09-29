@@ -2,17 +2,14 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Image,
-  ActivityIndicator,
   Alert,
 } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
 import Slider from "@react-native-community/slider";
 import { homeService } from "../../services/home";
-import { geocodingService } from "../../services/geocoding";
 import { Store } from "../../types/store";
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
@@ -25,13 +22,9 @@ const LocationPickerScreen = () => {
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   });
-  const [searchText, setSearchText] = useState("");
   const [radius, setRadius] = useState(6);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<Array<{description: string}>>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     getCurrentLocation();
@@ -94,7 +87,10 @@ const LocationPickerScreen = () => {
           typeof store.latitude === "number" &&
           typeof store.longitude === "number"
         );
-      });
+      }).map((store) => ({
+        ...store,
+        is_selling: true, // Default to true for stores from home service
+      }));
 
       setStores(allStores);
     } catch (error) {
@@ -105,64 +101,12 @@ const LocationPickerScreen = () => {
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchText.trim()) return;
-
-    try {
-      setSearchLoading(true);
-      const coordinates = await geocodingService.searchCity(searchText);
-      
-      const newRegion = {
-        ...region,
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-      };
-      
-      setRegion(newRegion);
-    } catch (error) {
-      console.error("Search error:", error);
-      Alert.alert("Error", "Could not find the specified location");
-    } finally {
-      setSearchLoading(false);
-    }
-  };
 
   const handleChooseLocation = () => {
     // Save the selected location and radius
     router.back();
   };
 
-  const handleSearchInputChange = async (text: string) => {
-    setSearchText(text);
-    if (text.length > 2) {
-      try {
-        const results = await geocodingService.getPlaceSuggestions(text);
-        setSuggestions(results);
-        setShowSuggestions(true);
-      } catch (error) {
-        console.error('Error fetching suggestions:', error);
-      }
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSuggestionSelect = async (suggestion: string) => {
-    setSearchText(suggestion);
-    setShowSuggestions(false);
-    try {
-      const coordinates = await geocodingService.searchCity(suggestion);
-      setRegion({
-        ...region,
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-      });
-    } catch (error) {
-      console.error('Error selecting suggestion:', error);
-      Alert.alert('Error', 'Could not find the specified location');
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -223,32 +167,6 @@ const LocationPickerScreen = () => {
       </MapView>
 
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for a city"
-          value={searchText}
-          onChangeText={handleSearchInputChange}
-        />
-        {searchLoading ? (
-          <ActivityIndicator style={styles.searchIcon} color="#036B52" />
-        ) : (
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            <Text style={styles.searchButtonText}>Search</Text>
-          </TouchableOpacity>
-        )}
-        {showSuggestions && suggestions.length > 0 && (
-          <View style={styles.suggestionsContainer}>
-            {suggestions.map((suggestion, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.suggestionItem}
-                onPress={() => handleSuggestionSelect(suggestion.description)}
-              >
-                <Text style={styles.suggestionText}>{suggestion.description}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
         <TouchableOpacity 
           style={styles.useLocationButton} 
           onPress={handleUseCurrentLocation}
@@ -302,14 +220,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  },
-  searchInput: {
-    backgroundColor: "#F8F8F8",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    borderColor: "#E0E0E0",
-    borderWidth: 1,
   },
   useLocationButton: {
     alignItems: "center",
@@ -375,44 +285,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 12,
     marginTop: 2,
-  },
-  searchButton: {
-    backgroundColor: "#036B52",
-    padding: 10,
-    borderRadius: 5,
-    marginLeft: 10,
-  },
-  searchButtonText: {
-    color: "#FFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  searchIcon: {
-    marginLeft: 10,
-  },
-  suggestionsContainer: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFF',
-    borderRadius: 5,
-    marginTop: 5,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    zIndex: 1000,
-  },
-  suggestionItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  suggestionText: {
-    fontSize: 14,
-    color: '#333',
   },
 });
 
