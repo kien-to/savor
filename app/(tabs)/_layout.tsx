@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, ActivityIndicator, View } from 'react-native';
+import { Platform } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HapticTab } from '@/components/HapticTab';
@@ -8,28 +8,9 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useAuth } from '../../context/AuthContext';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { token, isLoading } = useAuth();
-
-  // Debug logging
-  console.log('TabLayout - token:', token, 'isLoading:', isLoading);
-
-  // Show loading screen while checking authentication
-  if (isLoading) {
-    return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        backgroundColor: Colors[colorScheme ?? 'light'].background 
-      }}>
-        <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
-      </View>
-    );
-  }
 
   return (
     <Tabs
@@ -74,15 +55,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" size={28} color={color} />,
         }}
       />
-      {!token && (
-        <Tabs.Screen
-          name="login"
-          options={{
-            title: 'Đăng nhập',
-            tabBarIcon: ({ color }) => <MaterialIcons name="login" size={28} color={color} />,
-          }}
-        />
-      )}
     </Tabs>
   );
 }

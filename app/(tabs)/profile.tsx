@@ -25,6 +25,34 @@ const ProfileScreen = () => {
   const router = useRouter();
   const { logout, token } = useAuth();
 
+  // Debug function to clear all storage
+  const clearAllStorage = useCallback(async () => {
+    Alert.alert(
+      'Clear Storage (Debug)',
+      'This will clear ALL stored data. Use for testing only.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+              await AsyncStorage.clear();
+              console.log('All AsyncStorage cleared');
+              Alert.alert('Success', 'All storage cleared. Restart the app to test.');
+            } catch (error) {
+              console.error('Error clearing storage:', error);
+            }
+          },
+        },
+      ]
+    );
+  }, []);
+
   const fetchReservations = async () => {
     try {
       const data = await reservationService.getUserReservations();
@@ -100,7 +128,8 @@ const ProfileScreen = () => {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            // The tab layout will automatically show the login tab when token becomes null
+            // Navigate to root which will redirect to login screen
+            router.replace('/');
           },
         },
       ]
@@ -186,6 +215,12 @@ const ProfileScreen = () => {
               <MaterialIcons name="logout" size={20} color={Colors.light.accent} />
             </TouchableOpacity>
           )}
+          <TouchableOpacity 
+            style={styles.clearStorageButton}
+            onPress={clearAllStorage}
+          >
+            <Text style={styles.clearStorageText}>🗑️</Text>
+          </TouchableOpacity>
           <TouchableOpacity 
             style={styles.settingsButton}
             onPress={() => router.push('/SettingsScreen')}
@@ -296,6 +331,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  clearStorageButton: {
+    backgroundColor: '#FFA500',
+    padding: 8,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearStorageText: {
+    fontSize: 16,
   },
   settingsButton: {
     padding: 8,

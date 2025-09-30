@@ -45,96 +45,96 @@ export default function RootLayout() {
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="EmailScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="CountryScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="OnboardingScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="LoginScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen name="+not-found" />
-            <Stack.Screen
-              name="ForgotPasswordScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="SettingsScreen"
-              options={{
-                headerShown: false,
-                presentation: "modal",
-              }}
-            />
-            <Stack.Screen
-              name="AddBusinessDetailsScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="StoreScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="PaymentScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ContactScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="SignUpStoreScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="AccountDetailsScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="StoreListScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="PhoneLoginScreen"
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Stack>
+                 <Stack>
+                   <Stack.Screen name="index" options={{ headerShown: false }} />
+                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                   <Stack.Screen
+                     name="LoginScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="PhoneLoginScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="EmailScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="CountryScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="OnboardingScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen name="+not-found" />
+                   <Stack.Screen
+                     name="ForgotPasswordScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="SettingsScreen"
+                     options={{
+                       headerShown: false,
+                       presentation: "modal",
+                     }}
+                   />
+                   <Stack.Screen
+                     name="AddBusinessDetailsScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="StoreScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="PaymentScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="ContactScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="SignUpStoreScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="AccountDetailsScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="StoreListScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                 </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>
       </StripeProvider>

@@ -152,7 +152,7 @@ const HomeScreen = () => {
       [
         {
           text: "Đăng nhập",
-          onPress: () => router.push("/login"),
+          onPress: () => router.push("/LoginScreen"),
         },
         {
           text: "Hủy",

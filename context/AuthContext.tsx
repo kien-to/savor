@@ -25,13 +25,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        console.log('AuthContext - Initializing auth...');
         const token = await AsyncStorage.getItem('token');
         const userId = await AsyncStorage.getItem('userId');
+        console.log('AuthContext - Retrieved from storage - token:', token, 'userId:', userId);
         setAuthState({
           token,
           userId,
           isLoading: false,
         });
+        console.log('AuthContext - Auth state set, isLoading: false');
       } catch (error) {
         console.error('Error initializing auth:', error);
         setAuthState({
@@ -52,9 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    console.log('AuthContext - Logging out...');
     await AsyncStorage.removeItem('token');
     await AsyncStorage.removeItem('userId');
     setAuthState({ token: null, userId: null, isLoading: false });
+    console.log('AuthContext - Logout complete, token cleared');
   };
 
   return (

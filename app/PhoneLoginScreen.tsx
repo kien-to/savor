@@ -59,7 +59,7 @@ const PhoneLoginScreen = () => {
         Alert.alert('Thành công', 'Đăng nhập thành công!', [
           {
             text: 'OK',
-            onPress: () => router.replace('/(tabs)'),
+            onPress: () => router.replace('/'),
           },
         ]);
       }, 1000);
