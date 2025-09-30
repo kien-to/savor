@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Store } from '../types/store';
+import { Colors } from '../constants/Colors';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const StoreListScreen = () => {
   const router = useRouter();
@@ -41,9 +43,16 @@ const StoreListScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={24} color={Colors.light.text} />
+        </TouchableOpacity>
         <Text style={styles.title}>{title}</Text>
+        <View style={styles.headerSpacer} />
       </View>
       <View style={styles.listWrapper}>
         <FlatList
@@ -56,31 +65,38 @@ const StoreListScreen = () => {
           ListFooterComponent={<View style={styles.listFooter} />}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: Colors.light.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
-    // paddingTop: 60,
-    backgroundColor: '#FFF',
+    paddingTop: 8,
+    backgroundColor: Colors.light.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: Colors.light.border,
   },
   backButton: {
-    fontSize: 24,
-    marginRight: 16,
+    padding: 8,
+    borderRadius: 8,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.light.text,
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 40, // Balance the back button
   },
   listContainer: {
     padding: 8,
@@ -92,39 +108,49 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     margin: 8,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+    minHeight: 220, // Ensure consistent card height
   },
   cardHeader: {
     position: 'relative',
   },
   cardImage: {
     width: '100%',
-    height: 120,
+    height: 140,
+    resizeMode: 'cover',
   },
   cardContent: {
-    padding: 8,
+    padding: 12,
+    flex: 1,
+    justifyContent: 'space-between',
   },
   cardTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.text,
+    marginBottom: 6,
+    lineHeight: 20,
   },
   cardDescription: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: 13,
+    color: Colors.light.textSecondary,
+    marginBottom: 6,
+    lineHeight: 18,
+    flex: 1,
   },
   cardPickupTime: {
     fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
+    color: Colors.light.textSecondary,
+    marginBottom: 8,
+    fontWeight: '500',
   },
   cardFooter: {
     flexDirection: 'row',
@@ -136,9 +162,9 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   cardPrice: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#036B52',
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.primary,
   },
   listWrapper: {
     flex: 1,

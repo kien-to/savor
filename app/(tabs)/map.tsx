@@ -37,8 +37,8 @@ const LocationPickerScreen = () => {
       
       if (status !== 'granted') {
         Alert.alert(
-          "Permission Required",
-          "Please enable location services to use this feature"
+          "Cần quyền truy cập",
+          "Vui lòng cho phép truy cập vị trí để sử dụng tính năng này"
         );
         return;
       }
@@ -59,8 +59,8 @@ const LocationPickerScreen = () => {
     } catch (error) {
       console.error("Error getting location:", error);
       Alert.alert(
-        "Location Error",
-        "Could not get your current location. Please check your device settings."
+        "Lỗi vị trí",
+        "Không thể lấy vị trí hiện tại của bạn. Vui lòng kiểm tra cài đặt thiết bị."
       );
     } finally {
       setLoading(false);
@@ -95,7 +95,7 @@ const LocationPickerScreen = () => {
       setStores(allStores);
     } catch (error) {
       console.error("Error fetching stores:", error);
-      Alert.alert("Error", "Failed to fetch stores");
+      Alert.alert("Lỗi", "Không thể tải danh sách cửa hàng");
     } finally {
       setLoading(false);
     }
@@ -113,7 +113,14 @@ const LocationPickerScreen = () => {
       <MapView
         style={styles.map}
         region={region}
-        onRegionChangeComplete={setRegion}
+        onRegionChangeComplete={(newRegion) => {
+          // Only update longitude and latitude deltas to prevent pin movement
+          setRegion({
+            ...region,
+            latitudeDelta: newRegion.latitudeDelta,
+            longitudeDelta: newRegion.longitudeDelta,
+          });
+        }}
       >
         <Marker
           coordinate={{
@@ -171,12 +178,12 @@ const LocationPickerScreen = () => {
           style={styles.useLocationButton} 
           onPress={handleUseCurrentLocation}
         >
-          <Text style={styles.useLocationText}>Use Current Location</Text>
+          <Text style={styles.useLocationText}>Sử dụng vị trí hiện tại</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.sliderContainer}>
-        <Text style={styles.sliderText}>Select a distance</Text>
+        <Text style={styles.sliderText}>Chọn khoảng cách</Text>
         <Slider
           style={styles.slider}
           minimumValue={1}
@@ -194,7 +201,7 @@ const LocationPickerScreen = () => {
         style={styles.chooseLocationButton}
         onPress={handleChooseLocation}
       >
-        <Text style={styles.chooseLocationText}>Choose this location</Text>
+        <Text style={styles.chooseLocationText}>Chọn vị trí này</Text>
       </TouchableOpacity>
     </View>
   );

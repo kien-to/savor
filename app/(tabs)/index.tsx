@@ -211,9 +211,11 @@ const HomeScreen = () => {
         </View>
       </View>
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardDescription}>{item.description}</Text>
-        <Text style={styles.cardPickupTime}>{item.pickUpTime}</Text>
+        <View style={styles.cardInfo}>
+          <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
+          <Text style={styles.cardDescription} numberOfLines={2} ellipsizeMode="tail">{item.description}</Text>
+          <Text style={styles.cardPickupTime} numberOfLines={1} ellipsizeMode="tail">{item.pickUpTime}</Text>
+        </View>
         <View style={styles.cardFooter}>
           <Text style={styles.cardDistance}>{item.distance}</Text>
           <Text style={styles.cardPrice}>${item.price.toFixed(2)}</Text>
@@ -450,7 +452,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
     width: 280,
-    height: 320,
+    height: 340, // Increased height for better bottom padding
     marginBottom: 20,
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.05)',
@@ -463,6 +465,12 @@ const styles = StyleSheet.create({
   cardContent: {
     padding: 16,
     flex: 1,
+    justifyContent: 'space-between',
+  },
+  cardInfo: {
+    height: 100, // Fixed height for consistent card layout
+    marginBottom: 12,
+    justifyContent: 'flex-start',
   },
   cardTitle: {
     fontSize: 18,
@@ -476,11 +484,13 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
     marginBottom: 8,
     lineHeight: 18,
+    height: 36, // Fixed height for exactly 2 lines (18 * 2)
+    textAlignVertical: 'top',
   },
   cardPickupTime: {
     fontSize: 13,
     color: Colors.light.textSecondary,
-    marginBottom: 12,
+    marginBottom: 0,
     fontWeight: '500',
   },
   cardFooter: {

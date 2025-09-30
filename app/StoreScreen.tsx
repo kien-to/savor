@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Alert,
+  Clipboard,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState, useCallback } from 'react';
@@ -91,6 +93,13 @@ const StoreDetailScreen = () => {
   //     // Optionally show an error message to the user
   //   }
   // }, [storeData?.id]);
+
+  const copyAddress = useCallback(() => {
+    if (storeData?.address) {
+      Clipboard.setString(storeData.address);
+      Alert.alert('Đã sao chép', 'Địa chỉ đã được sao chép vào clipboard');
+    }
+  }, [storeData?.address]);
 
   if (loading) {
     return <ActivityIndicator size="large" color={Colors.light.primary} />;
@@ -178,9 +187,9 @@ const StoreDetailScreen = () => {
         </View>
 
         {/* Address */}
-        <TouchableOpacity style={styles.addressContainer}>
+        <TouchableOpacity style={styles.addressContainer} onPress={copyAddress}>
           <Text style={styles.addressText}>📍 {storeData?.address}</Text>
-          <Text style={styles.moreInfoText}>Thêm thông tin về cửa hàng</Text>
+          <Text style={styles.copyAddressText}>Nhấn để sao chép địa chỉ</Text>
         </TouchableOpacity>
 
         {/* Description */}
@@ -340,9 +349,10 @@ const styles = StyleSheet.create({
     color: '#036B52',
     marginBottom: 4,
   },
-  moreInfoText: {
+  copyAddressText: {
     fontSize: 12,
-    color: '#666',
+    color: Colors.light.primary,
+    fontStyle: 'italic',
   },
   descriptionContainer: {
     marginVertical: 16,
