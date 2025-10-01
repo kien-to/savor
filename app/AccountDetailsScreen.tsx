@@ -25,16 +25,11 @@ const AccountDetailsScreen = () => {
     { label: 'Tên', value: user?.displayName || 'Chưa cài đặt' },
     { label: 'Email', value: user?.email || 'Chưa cài đặt' },
     { label: 'Số điện thoại', value: user?.phoneNumber || 'Chưa cài đặt', optional: true },
-    { label: 'Quốc gia', value: 'Việt Nam' },
-    { label: 'Giới tính', value: 'Chưa cài đặt', optional: true },
-    { label: 'Sở thích ăn uống', value: 'Chưa cài đặt', optional: true },
     { label: 'Ngày sinh', value: 'Chưa cài đặt' },
   ];
 
   const locations = [
-    { label: 'Nhà', value: 'Chưa cài đặt' },
-    { label: 'Công ty', value: 'Chưa cài đặt' },
-    { label: 'Khác', value: 'Chưa cài đặt' },
+    { label: 'Địa chỉ nhà', value: 'Chưa cài đặt' },
   ];
 
   const renderDetailItem = (item: AccountDetailItem) => (
@@ -68,13 +63,13 @@ const AccountDetailsScreen = () => {
         {personalInfo.map(renderDetailItem)}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Địa chỉ của tôi</Text>
-        {locations.map(location => renderDetailItem({
-          label: location.label,
-          value: location.value
-        }))}
-      </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Địa chỉ</Text>
+              {locations.map(location => renderDetailItem({
+                label: location.label,
+                value: location.value
+              }))}
+            </View>
     </ScrollView>
   );
 };

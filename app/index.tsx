@@ -11,17 +11,20 @@ export default function Index() {
   useEffect(() => {
     console.log('Index - token:', token, 'isLoading:', isLoading);
     if (!isLoading) {
-      if (token) {
-        console.log('Index - User is authenticated, navigating to tabs');
-        // User is authenticated, go to tabs
-        router.replace('/(tabs)');
-      } else {
-        console.log('Index - User is NOT authenticated, navigating to login');
-        // User is not authenticated, go to login
-        router.replace('/LoginScreen');
-      }
+      // Add a small delay to ensure state is properly updated
+      setTimeout(() => {
+        if (token) {
+          console.log('Index - User is authenticated, navigating to tabs');
+          // User is authenticated, go to tabs
+          router.replace('/(tabs)');
+        } else {
+          console.log('Index - User is NOT authenticated, navigating to login');
+          // User is not authenticated, go to login
+          router.replace('/LoginScreen');
+        }
+      }, 100);
     }
-  }, [token, isLoading, router]);
+  }, [token, isLoading]);
   
   // Show loading screen while checking authentication
   return (

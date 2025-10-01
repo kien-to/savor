@@ -128,8 +128,8 @@ const ProfileScreen = () => {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            // Navigate to root which will redirect to login screen
-            router.replace('/');
+            // Navigate directly to login screen
+            router.replace('/LoginScreen');
           },
         },
       ]

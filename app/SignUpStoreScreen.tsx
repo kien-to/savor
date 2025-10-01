@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Colors } from '../constants/Colors';
 
 const SignUpStoreScreen = () => {
   const router = useRouter();
@@ -64,13 +65,12 @@ const SignUpStoreScreen = () => {
       </View>
 
       <ScrollView style={styles.content}>
-        {/* Hero Image */}
-        <View style={styles.heroContainer}>
-          <Image
-            source={require('../assets/images/icon.png')}
-            style={styles.heroImage}
-          />
-        </View>
+               {/* Hero Section */}
+               <View style={styles.heroContainer}>
+                 <View style={styles.heroImageContainer}>
+                   <Text style={styles.heroIcon}>🏪</Text>
+                 </View>
+               </View>
 
         {/* Main Content */}
         <View style={styles.mainContent}>
@@ -164,12 +164,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   heroContainer: {
-    position: 'relative',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 20,
   },
-  heroImage: {
-    width: '100%',
-    height: 200,
-    resizeMode: 'cover',
+  heroImageContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: Colors.light.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  heroIcon: {
+    fontSize: 48,
+    color: Colors.light.accent,
   },
   mainContent: {
     padding: 16,

@@ -7,6 +7,9 @@ import {
   TextInput,
   Alert,
   SafeAreaView,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -20,6 +23,7 @@ const PhoneLoginScreen = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   const handleSendCode = async () => {
     if (!phoneNumber.trim()) {
@@ -56,7 +60,7 @@ const PhoneLoginScreen = () => {
         setLoading(false);
         // Simulate successful login with mock token and userId
         await login('mock-phone-token-' + phoneNumber, 'mock-user-id-' + phoneNumber);
-        Alert.alert('Thành công', 'Đăng nhập thành công!', [
+        Alert.alert('Thành công', isSignUp ? 'Đăng ký thành công!' : 'Đăng nhập thành công!', [
           {
             text: 'OK',
             onPress: () => router.replace('/'),
@@ -79,19 +83,37 @@ const PhoneLoginScreen = () => {
         >
           <MaterialIcons name="arrow-back" size={24} color={Colors.light.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Đăng nhập với số điện thoại</Text>
+        <Text style={styles.headerTitle}>
+          {isSignUp ? 'Đăng ký với số điện thoại' : 'Đăng nhập với số điện thoại'}
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <View style={styles.content}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.content}>
         <Text style={styles.title}>
-          {isCodeSent ? 'Nhập mã xác thực' : 'Nhập số điện thoại'}
+          {isCodeSent 
+            ? 'Nhập mã xác thực' 
+            : isSignUp 
+              ? 'Tạo tài khoản mới' 
+              : 'Chào mừng trở lại'
+          }
         </Text>
         
         <Text style={styles.subtitle}>
           {isCodeSent 
             ? `Chúng tôi đã gửi mã xác thực đến số ${phoneNumber}`
-            : 'Chúng tôi sẽ gửi mã xác thực đến số điện thoại của bạn'
+            : isSignUp
+              ? 'Nhập số điện thoại để tạo tài khoản Savor'
+              : 'Đăng nhập vào tài khoản Savor của bạn'
           }
         </Text>
 
@@ -102,6 +124,7 @@ const PhoneLoginScreen = () => {
               <TextInput
                 style={styles.phoneInput}
                 placeholder="Nhập số điện thoại"
+                placeholderTextColor={Colors.light.textSecondary}
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
                 keyboardType="phone-pad"
@@ -119,12 +142,24 @@ const PhoneLoginScreen = () => {
                 {loading ? 'Đang gửi...' : 'Gửi mã xác thực'}
               </Text>
             </TouchableOpacity>
+
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchText}>
+                {isSignUp ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}
+              </Text>
+              <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+                <Text style={styles.switchLink}>
+                  {isSignUp ? 'Đăng nhập' : 'Đăng ký ngay'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </>
         ) : (
           <>
             <TextInput
               style={styles.codeInput}
               placeholder="Nhập mã 6 chữ số"
+              placeholderTextColor={Colors.light.textSecondary}
               value={verificationCode}
               onChangeText={setVerificationCode}
               keyboardType="number-pad"
@@ -154,7 +189,9 @@ const PhoneLoginScreen = () => {
             </TouchableOpacity>
           </>
         )}
-      </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -163,6 +200,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',
@@ -275,6 +318,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     textDecorationLine: 'underline',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  switchText: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    marginRight: 5,
+  },
+  switchLink: {
+    fontSize: 14,
+    color: Colors.light.primary,
+    fontWeight: '600',
   },
 });
 

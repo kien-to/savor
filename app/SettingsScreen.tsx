@@ -3,15 +3,17 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
+import { useAuth } from '../context/AuthContext';
 
 const SettingsScreen = () => {
   const router = useRouter();
   const auth = getAuth();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await auth.signOut();
-      router.replace('/(tabs)');
+      await logout();
+      router.replace('/LoginScreen');
     } catch (error) {
       console.error('Error signing out:', error);
     }
