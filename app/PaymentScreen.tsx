@@ -23,7 +23,7 @@ import { Colors } from '../constants/Colors';
 const PaymentScreen = () => {
   const stripe = useStripe();
   const router = useRouter();
-  const { isGuest, isAuthenticated } = useAuth();
+  const { isGuest, isAuthenticated, userEmail } = useAuth();
   const { 
     storeId, 
     storeTitle, 
@@ -107,6 +107,7 @@ const PaymentScreen = () => {
       console.log("pickUpTime", pickUpTime);
 
       if (isGuest) {
+        console.log("Creating guest reservation");
         // Create guest reservation
         const guestReservationData = {
           storeId: storeId.toString(),
@@ -139,6 +140,7 @@ const PaymentScreen = () => {
           ]
         );
       } else {
+        console.log("Creating authenticated reservation");
         // NEW WAY: For authenticated users, create reservation directly
         const authenticatedReservationData = {
           storeId: storeId.toString(),
@@ -154,7 +156,7 @@ const PaymentScreen = () => {
           pickupTime: pickUpTime.toString(),
           name: customerName,
           phone: phoneNumber,
-          email: undefined, // Will be handled by backend for authenticated users
+          email: userEmail || undefined,
           paymentType: selectedPaymentMethod,
         };
 

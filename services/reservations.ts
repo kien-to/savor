@@ -25,7 +25,7 @@ export interface Reservation {
     phone?: string;
 }
 
-export interface GuestReservationRequest {
+export interface ReservationRequest {
     storeId: string;
     storeName: string;
     storeImage: string;
@@ -44,6 +44,20 @@ export interface GuestReservationRequest {
 }
 
 export const reservationService = {
+    async getAuthHeader(): Promise<string | null> {
+        try {
+            const currentUser = getAuth(firebase).currentUser;
+            if (currentUser) {
+                const idToken = await currentUser.getIdToken();
+                return `Bearer ${idToken}`;
+            }
+            const token = await AsyncStorage.getItem('token');
+            if (token) return `Bearer ${token}`;
+            return null;
+        } catch {
+            return null;
+        }
+    },
     async getUserReservations(): Promise<Reservation[]> {
         // Try Firebase auth first (for social login users)
         const currentUser = getAuth(firebase).currentUser;
@@ -61,8 +75,7 @@ export const reservationService = {
             if (!response.ok) {
                 const errorData = await response.text();
                 console.error('Reservation fetch error:', errorData);
-                // Fall back to local reservations instead of throwing error
-                return this.getLocalAuthenticatedReservations();
+                return [];
             }
 
             const data = await response.json();
@@ -88,15 +101,13 @@ export const reservationService = {
         }
 
         // Try JWT token auth (for email login users)
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-            throw new Error('User not authenticated');
-        }
+        const authHeader = await this.getAuthHeader();
+        if (!authHeader) return [];
 
         const response = await fetch(`${API_URL}/api/reservations`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': authHeader,
                 'Content-Type': 'application/json',
             },
         });
@@ -104,8 +115,7 @@ export const reservationService = {
         if (!response.ok) {
             const errorData = await response.text();
             console.error('Reservation fetch error:', errorData);
-            // Fall back to local reservations instead of throwing error
-            return this.getLocalAuthenticatedReservations();
+            return [];
         }
 
         const data = await response.json();
@@ -126,8 +136,8 @@ export const reservationService = {
             return data.reservations;
         }
 
-        // If we get here, return local reservations as fallback
-        return this.getLocalAuthenticatedReservations();
+        // If we get here, return empty
+        return [];
     },
 
     async getGuestReservations(): Promise<Reservation[]> {
@@ -221,7 +231,7 @@ export const reservationService = {
         }
     },
 
-    async createGuestReservation(reservationData: GuestReservationRequest): Promise<Reservation> {
+    async createGuestReservation(reservationData: ReservationRequest): Promise<Reservation> {
         try {
             const response = await fetch(`${API_URL}/api/reservations/guest`, {
                 method: 'POST',
@@ -274,7 +284,7 @@ export const reservationService = {
         }
     },
 
-    async createAuthenticatedReservation(reservationData: GuestReservationRequest): Promise<Reservation> {
+    async createAuthenticatedReservation(reservationData: ReservationRequest): Promise<Reservation> {
         try {
             // Try Firebase auth first (for social login users)
             const currentUser = getAuth(firebase).currentUser;
@@ -342,41 +352,29 @@ export const reservationService = {
             return data;
         } catch (error) {
             console.error('Error creating authenticated reservation:', error);
-            
-            // If server fails, create a local reservation as fallback
-            console.log('Creating local reservation as fallback for authenticated user');
-            const localReservation: Reservation = {
-                id: `local_auth_${Date.now()}`,
-                storeId: reservationData.storeId,
-                storeName: reservationData.storeName,
-                storeImage: reservationData.storeImage,
-                storeAddress: reservationData.storeAddress,
-                storeLatitude: reservationData.storeLatitude,
-                storeLongitude: reservationData.storeLongitude,
-                quantity: reservationData.quantity,
-                totalAmount: reservationData.totalAmount,
-                originalPrice: reservationData.originalPrice,
-                discountedPrice: reservationData.discountedPrice,
-                status: 'pending',
-                paymentType: reservationData.paymentType,
-                pickupTime: reservationData.pickupTime,
-                createdAt: new Date().toISOString(),
-                name: reservationData.name,
-                email: reservationData.email,
-                phone: reservationData.phone,
-            };
-            
-            // Save locally for authenticated users too
-            await this.saveLocalAuthenticatedReservation(localReservation);
-            return localReservation;
+            throw error;
         }
     },
 
     async getReservations(isGuest: boolean = false): Promise<Reservation[]> {
-        if (isGuest) {
-            return this.getGuestReservations();
-        } else {
-            return this.getUserReservations();
+        return isGuest ? this.getGuestReservations() : this.getUserReservations();
+    },
+
+    async deleteReservation(reservationId: string): Promise<void> {
+        const authHeader = await this.getAuthHeader();
+        if (!authHeader) throw new Error('User not authenticated');
+
+        const response = await fetch(`${API_URL}/api/reservations/${reservationId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': authHeader,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to delete reservation');
         }
     },
 

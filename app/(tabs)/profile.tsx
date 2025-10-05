@@ -115,8 +115,8 @@ const ProfileScreen = () => {
               // Remove from local state immediately for better UX
               setReservations(prev => prev.filter(r => r.id !== reservationId));
               
-              // Here you would call an API to actually delete the reservation
-              // await reservationService.deleteReservation(reservationId);
+              // Call backend to actually delete the reservation
+              await reservationService.deleteReservation(reservationId);
               
               Alert.alert('Thành công', 'Đã xóa đặt chỗ thành công');
             } catch (error) {
@@ -190,7 +190,7 @@ const ProfileScreen = () => {
         </View>
         <TouchableOpacity
           style={styles.removeButtonCorner}
-          onPress={(e) => {
+          onPress={async (e) => {
             e.stopPropagation();
             handleRemoveReservation(reservation.id, reservation.storeName);
           }}
