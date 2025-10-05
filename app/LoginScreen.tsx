@@ -8,7 +8,7 @@ import { Colors } from "../constants/Colors";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, continueAsGuest } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const [_, response, promptAsync] = Google.useAuthRequest({
@@ -59,6 +59,18 @@ export default function LoginScreen() {
     }
   };
 
+  const handleContinueAsGuest = async () => {
+    try {
+      setLoading(true);
+      await continueAsGuest();
+      router.replace('/');
+    } catch (error: any) {
+      Alert.alert('Lỗi', 'Không thể tiếp tục với tư cách khách');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.headerText}>Chung tay cứu lấy đồ ăn</Text>
@@ -76,13 +88,13 @@ export default function LoginScreen() {
         <Text style={styles.buttonText}>Tiếp tục với Google</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.button, styles.phoneButton]}
         onPress={() => router.push("/PhoneLoginScreen")}
         disabled={loading}
       >
         <Text style={styles.buttonText}>Tiếp tục với số điện thoại</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <TouchableOpacity
         style={[styles.button, styles.emailButton]}
@@ -90,6 +102,14 @@ export default function LoginScreen() {
         disabled={loading}
       >
         <Text style={styles.buttonText}>Tiếp tục với Email</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, styles.guestButton]}
+        onPress={handleContinueAsGuest}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>Tiếp tục không đăng nhập</Text>
       </TouchableOpacity>
     </View>
   );
@@ -148,5 +168,8 @@ const styles = StyleSheet.create({
   },
   phoneButton: {
     backgroundColor: "#34B7F1",
+  },
+  guestButton: {
+    backgroundColor: "#6B7280", // Gray color for guest option
   },
 });

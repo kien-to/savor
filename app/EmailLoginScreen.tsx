@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/auth';
 
 const EmailLoginScreen = () => {
   const router = useRouter();
@@ -24,6 +25,7 @@ const EmailLoginScreen = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  
 
   const handleEmailAuth = async () => {
     if (!email.trim() || !password.trim()) {
@@ -36,25 +38,43 @@ const EmailLoginScreen = () => {
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Lỗi', 'Vui lòng nhập email hợp lệ');
+      return;
+    }
+
+    // Password length validation for signup
+    if (isSignUp && password.length < 6) {
+      Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
+
     try {
       setLoading(true);
       
-      // Here you would implement actual email authentication
-      // For now, we'll simulate successful authentication
-      setTimeout(async () => {
-        setLoading(false);
-        // Simulate successful login with mock token and userId
-        await login('mock-email-token-' + email, 'mock-user-id-' + email);
-        Alert.alert('Thành công', isSignUp ? 'Đăng ký thành công!' : 'Đăng nhập thành công!', [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/'),
-          },
-        ]);
-      }, 1000);
-    } catch (error) {
+      let result;
+      if (isSignUp) {
+        result = await authService.signUp({ email, password });
+      } else {
+        result = await authService.login({ email, password });
+      }
+
+      // Use the actual token and user_id from the server response
+      await login(result.token, result.user_id, email);
+      
+      Alert.alert('Thành công', isSignUp ? 'Đăng ký thành công!' : 'Đăng nhập thành công!', [
+        {
+          text: 'OK',
+          onPress: () => router.replace('/'),
+        },
+      ]);
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.message || (isSignUp ? 'Đăng ký thất bại. Vui lòng thử lại.' : 'Đăng nhập thất bại. Vui lòng thử lại.'));
+    } finally {
       setLoading(false);
-      Alert.alert('Lỗi', isSignUp ? 'Đăng ký thất bại. Vui lòng thử lại.' : 'Đăng nhập thất bại. Vui lòng thử lại.');
     }
   };
 
@@ -109,6 +129,7 @@ const EmailLoginScreen = () => {
               />
             </View>
 
+
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
@@ -162,7 +183,10 @@ const EmailLoginScreen = () => {
             </View>
 
             {!isSignUp && (
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity 
+                style={styles.forgotPassword}
+                onPress={() => router.push('/ForgotPasswordScreen')}
+              >
                 <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
               </TouchableOpacity>
             )}

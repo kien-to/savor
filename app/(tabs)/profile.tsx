@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { Colors } from "../../constants/Colors";
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { userService } from '../../services/user';
 // import { format } from "date-fns";
 
 const ProfileScreen = () => {
@@ -23,7 +24,7 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { logout, token } = useAuth();
+  const { logout, token, isGuest, isAuthenticated, userEmail, userName } = useAuth();
 
   // Debug function to clear all storage
   const clearAllStorage = useCallback(async () => {
@@ -55,7 +56,8 @@ const ProfileScreen = () => {
 
   const fetchReservations = async () => {
     try {
-      const data = await reservationService.getUserReservations();
+      const data = await reservationService.getReservations(isGuest);
+      // const data = await reservationService.getCombinedReservations(isGuest);
       setReservations(data || []);
       setError(null);
     } catch (err) {
@@ -76,10 +78,25 @@ const ProfileScreen = () => {
     }
   }, []);
 
-  // Initial fetch
+  // Fetch user profile information
+  const fetchUserProfile = async () => {
+    if (isAuthenticated && !isGuest) {
+      try {
+        const profile = await userService.getUserProfile();
+        // Update auth context with fresh profile data
+        // This would require adding an updateProfile method to AuthContext
+        console.log('User profile fetched:', profile);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    }
+  };
+
+  // Initial fetch - refetch when auth state changes
   React.useEffect(() => {
     fetchReservations();
-  }, []);
+    fetchUserProfile();
+  }, [isGuest, isAuthenticated]);
 
   const handleRemoveReservation = useCallback((reservationId: string, storeName: string) => {
     Alert.alert(
@@ -204,10 +221,17 @@ const ProfileScreen = () => {
             source={{ uri: "https://via.placeholder.com/80" }}
             style={styles.avatar}
           />
-          <Text style={styles.userName}>Kiên Tô</Text>
+          <View>
+            <Text style={styles.userName}>
+              {isGuest ? "Khách" : (userName || userEmail || "Người dùng")}
+            </Text>
+            {isGuest && (
+              <Text style={styles.guestLabel}>Đang duyệt với tư cách khách</Text>
+            )}
+          </View>
         </View>
         <View style={styles.headerButtons}>
-          {token && (
+          {(isAuthenticated || isGuest) && (
             <TouchableOpacity 
               style={styles.logoutButton}
               onPress={handleLogout}
@@ -319,6 +343,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     color: Colors.light.accent,
+  },
+  guestLabel: {
+    fontSize: 12,
+    color: Colors.light.accent,
+    opacity: 0.8,
+    marginTop: 2,
   },
   headerButtons: {
     flexDirection: 'row',

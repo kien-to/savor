@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getAuth } from 'firebase/auth';
+// Do NOT read from Firebase user here (can be stale after logout). Always use server profile.
+import { Colors } from '../constants/Colors';
+import { userService } from '../services/user';
 
 interface AccountDetailItem {
   label: string;
@@ -18,15 +21,37 @@ interface AccountDetailItem {
 
 const AccountDetailsScreen = () => {
   const router = useRouter();
-  const auth = getAuth();
-  const user = auth.currentUser;
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [saving, setSaving] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const personalInfo: AccountDetailItem[] = [
-    { label: 'Tên', value: user?.displayName || 'Chưa cài đặt' },
-    { label: 'Email', value: user?.email || 'Chưa cài đặt' },
-    { label: 'Số điện thoại', value: user?.phoneNumber || 'Chưa cài đặt', optional: true },
-    { label: 'Ngày sinh', value: 'Chưa cài đặt' },
-  ];
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const profile = await userService.getUserProfile();
+        setName(profile.name || name);
+        setEmail(profile.email || email);
+        setPhone(profile.phone || phone);
+      } catch {}
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await userService.updateUserProfile({ name, phone, email });
+      router.back();
+    } catch (e: any) {
+      console.error('Save profile error:', e);
+      alert(e?.message || 'Không thể lưu thông tin');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const locations = [
     { label: 'Địa chỉ nhà', value: 'Chưa cài đặt' },
@@ -47,29 +72,51 @@ const AccountDetailsScreen = () => {
   );
 
   return (
-    <ScrollView style={styles.container}>
-      {/* <View style={styles.header}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Account details</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="close" size={24} color="#000" />
-        </TouchableOpacity>
-      </View> */}
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
-        {personalInfo.map(renderDetailItem)}
+        <Text style={styles.headerTitle}>Chi tiết tài khoản</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Địa chỉ</Text>
-              {locations.map(location => renderDetailItem({
-                label: location.label,
-                value: location.value
-              }))}
-            </View>
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Họ tên</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder="Nhập họ tên"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+          editable={!saving}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.inputDisabled}
+          value={email}
+          editable={false}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Số điện thoại</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder="Nhập số điện thoại"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+          editable={!saving}
+        />
+      </View>
+
+      <TouchableOpacity style={[styles.saveButton, saving && { opacity: 0.6 }]} onPress={handleSave} disabled={saving}>
+        <Text style={styles.saveText}>{saving ? 'Đang lưu...' : 'Lưu thay đổi'}</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -78,6 +125,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
   header: {
     flexDirection: 'row',
@@ -94,6 +150,59 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingTop: 24,
+  },
+  formGroup: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  label: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFF',
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFF',
+    fontSize: 16,
+    color: '#333',
+  },
+  inputDisabled: {
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#F9F9F9',
+  },
+  inputText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  saveButton: {
+    marginTop: 24,
+    marginHorizontal: 16,
+    backgroundColor: '#425e57',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  saveText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   sectionTitle: {
     fontSize: 16,
@@ -115,7 +224,7 @@ const styles = StyleSheet.create({
   labelContainer: {
     flex: 1,
   },
-  label: {
+  rowLabel: {
     fontSize: 16,
     color: '#333',
   },

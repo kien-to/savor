@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,101 +8,201 @@ import {
   ScrollView,
   Modal,
   Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useStripe } from '@stripe/stripe-react-native';
-import { paymentService } from '../services/payment';
+// import { paymentService } from '../services/payment'; // Old payment service - commented out
+import { reservationService } from '../services/reservations';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
 import { Colors } from '../constants/Colors';
 
 const PaymentScreen = () => {
   const stripe = useStripe();
   const router = useRouter();
+  const { isGuest, isAuthenticated } = useAuth();
   const { 
     storeId, 
     storeTitle, 
     price, 
     pickUpTime, 
-    itemsLeft 
+    itemsLeft,
+    storeImage,
+    storeAddress,
+    storeLatitude,
+    storeLongitude,
   } = useLocalSearchParams();
   
   const [quantity, setQuantity] = useState(1);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Pay at Store');
   const [loading, setLoading] = useState(false);
+  
+  // Contact information state
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [customerName, setCustomerName] = useState('');
 
   const subtotal = Number(price) * quantity;
 
+  // Load stored contact information on component mount
+  useEffect(() => {
+    const loadStoredInfo = async () => {
+      try {
+        const storedPhone = await AsyncStorage.getItem('userPhoneNumber');
+        const storedName = await AsyncStorage.getItem('customerName');
+        if (storedPhone) {
+          setPhoneNumber(storedPhone);
+        }
+        if (storedName) {
+          setCustomerName(storedName);
+        }
+      } catch (error) {
+        console.error('Error loading stored contact info:', error);
+      }
+    };
+    loadStoredInfo();
+  }, []);
+
   const handlePayment = async () => {
-    // Only Pay at Store is available, so we can simplify the logic
-    /* Commented out other payment methods logic
-    if (selectedPaymentMethod === 'Payment Card') {
-      router.push({
-        pathname: '/CreditCardScreen',
-        params: { totalAmount: subtotal }
-      });
+    // Process payment directly with phone number from the form
+    await processPayment();
+  };
+
+  const validateContactInfo = () => {
+    if (!customerName.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập họ tên');
+      return false;
+    }
+    if (!phoneNumber.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập số điện thoại');
+      return false;
+    }
+
+    // Phone number validation (basic)
+    const phoneRegex = /^[0-9+\-\s()]+$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      Alert.alert('Lỗi', 'Số điện thoại không hợp lệ');
+      return false;
+    }
+
+    return true;
+  };
+
+  const processPayment = async () => {
+    if (!validateContactInfo()) {
       return;
     }
-    */
 
     try {
       setLoading(true);
+      
+      // Store contact information for future use
+      await AsyncStorage.setItem('userPhoneNumber', phoneNumber);
+      await AsyncStorage.setItem('customerName', customerName);
+      
+      console.log("Processing payment with phone number:", phoneNumber);
       console.log("pickUpTime", pickUpTime);
-      
-      // Create payment intent for Pay at Store
-      const { clientSecret, paymentIntentId } = await paymentService.createPaymentIntent(
-        storeId.toString(),
-        quantity,
-        subtotal,
-        selectedPaymentMethod, // This will always be 'Pay at Store'
-        pickUpTime.toString()
-      );
 
-      // Use confirmPayAtStore for Pay at Store method
-      const { error } = await paymentService.confirmPayAtStore(paymentIntentId);
-      if (error) {
-        Alert.alert('Lỗi', 'Không thể xác nhận đơn hàng');
-        return;
-      }
+      if (isGuest) {
+        // Create guest reservation
+        const guestReservationData = {
+          storeId: storeId.toString(),
+          storeName: storeTitle.toString(),
+          storeImage: storeImage?.toString() || '',
+          storeAddress: storeAddress?.toString() || '',
+          storeLatitude: Number(storeLatitude) || 0,
+          storeLongitude: Number(storeLongitude) || 0,
+          quantity,
+          totalAmount: subtotal,
+          originalPrice: Number(price),
+          discountedPrice: Number(price), // Assuming no discount for now
+          pickupTime: pickUpTime.toString(),
+          name: customerName,
+          phone: phoneNumber,
+          email: undefined, // No email for guests
+          paymentType: selectedPaymentMethod,
+        };
 
-      Alert.alert(
-        'Xác nhận đơn hàng',
-        'Đơn hàng đã được đặt thành công. Vui lòng thanh toán tại cửa hàng khi nhận hàng.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(tabs)')
-          }
-        ]
-      );
-
-      /* Commented out other payment methods handling
-      // Handle other payment methods
-      if (selectedPaymentMethod === 'Apple Pay') {
-        const { error: paymentError } = await stripe.handleNextAction(clientSecret);
-        if (paymentError) {
-          console.log(paymentError);
-          Alert.alert('Lỗi', 'Không thể xử lý thanh toán');
-          return;
-        }
-      } else {
-        // Handle card payment
-        const { error } = await stripe.confirmPayment(clientSecret, {
-          paymentMethodType: 'Card',
-        });
+        await reservationService.createGuestReservation(guestReservationData);
         
+        Alert.alert(
+          'Đặt hàng thành công!',
+          'Đơn hàng của bạn đã được đặt thành công. Vui lòng thanh toán tại cửa hàng khi nhận hàng.',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/(tabs)')
+            }
+          ]
+        );
+      } else {
+        // NEW WAY: For authenticated users, create reservation directly
+        const authenticatedReservationData = {
+          storeId: storeId.toString(),
+          storeName: storeTitle.toString(),
+          storeImage: storeImage?.toString() || '',
+          storeAddress: storeAddress?.toString() || '',
+          storeLatitude: Number(storeLatitude) || 0,
+          storeLongitude: Number(storeLongitude) || 0,
+          quantity,
+          totalAmount: subtotal,
+          originalPrice: Number(price),
+          discountedPrice: Number(price), // Assuming no discount for now
+          pickupTime: pickUpTime.toString(),
+          name: customerName,
+          phone: phoneNumber,
+          email: undefined, // Will be handled by backend for authenticated users
+          paymentType: selectedPaymentMethod,
+        };
+
+        await reservationService.createAuthenticatedReservation(authenticatedReservationData);
+        
+        Alert.alert(
+          'Đặt hàng thành công!',
+          'Đơn hàng của bạn đã được đặt thành công. Vui lòng thanh toán tại cửa hàng khi nhận hàng.',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/(tabs)')
+            }
+          ]
+        );
+
+        // OLD WAY: Firebase-only payment service (commented out - doesn't work with email login)
+        /*
+        const { clientSecret, paymentIntentId } = await paymentService.createPaymentIntent(
+          storeId.toString(),
+          quantity,
+          subtotal,
+          selectedPaymentMethod,
+          pickUpTime.toString()
+        );
+
+        const { error } = await paymentService.confirmPayAtStore(paymentIntentId);
         if (error) {
-          Alert.alert('Lỗi', error.message);
+          Alert.alert('Lỗi', 'Không thể xác nhận đơn hàng');
           return;
         }
-      }
 
-      // Payment successful
-      Alert.alert('Thành công', 'Đặt hàng thành công!');
-      router.replace('/(tabs)');
-      */
+        Alert.alert(
+          'Xác nhận đơn hàng',
+          'Đơn hàng đã được đặt thành công. Vui lòng thanh toán tại cửa hàng khi nhận hàng.',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/(tabs)')
+            }
+          ]
+        );
+        */
+      }
       
-    } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra trong quá trình thanh toán');
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      Alert.alert('Lỗi', error.message || 'Có lỗi xảy ra trong quá trình đặt hàng');
     } finally {
       setLoading(false);
     }
@@ -122,7 +222,10 @@ const PaymentScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 
@@ -171,6 +274,33 @@ const PaymentScreen = () => {
           </View>
         </View>
 
+        {/* Contact Information */}
+        <View style={styles.contactContainer}>
+          <Text style={styles.sectionTitle}>THÔNG TIN LIÊN HỆ</Text>
+          <View style={styles.nameInputContainer}>
+            <Text style={styles.inputLabel}>Họ tên *</Text>
+            <TextInput
+              style={styles.contactInput}
+              placeholder="Nhập họ tên của bạn"
+              value={customerName}
+              onChangeText={setCustomerName}
+              autoCapitalize="words"
+              editable={!loading}
+            />
+          </View>
+          <View style={styles.phoneInputContainer}>
+            <Text style={styles.inputLabel}>Số điện thoại *</Text>
+            <TextInput
+              style={styles.contactInput}
+              placeholder="Nhập số điện thoại để nhận hàng"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              keyboardType="phone-pad"
+              editable={!loading}
+            />
+          </View>
+        </View>
+
         {/* Terms and Conditions */}
         <Text style={styles.termsText}>
           Bằng việc đặt món này, bạn đồng ý với{' '}
@@ -205,6 +335,7 @@ const PaymentScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
 
       {/* Payment Method Modal */}
       <Modal
@@ -253,7 +384,7 @@ const PaymentScreen = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -454,7 +585,32 @@ const styles = StyleSheet.create({
     color: Colors.light.accent,
     fontSize: 18,
     fontWeight: '700',
-  },  
+  },
+  // Contact section styles
+  contactContainer: {
+    marginBottom: 16,
+  },
+  nameInputContainer: {
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  phoneInputContainer: {
+    marginTop: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  contactInput: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#FFF',
+  },
 });
 
 export default PaymentScreen;
