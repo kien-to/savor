@@ -360,21 +360,38 @@ export const reservationService = {
         return isGuest ? this.getGuestReservations() : this.getUserReservations();
     },
 
-    async deleteReservation(reservationId: string): Promise<void> {
-        const authHeader = await this.getAuthHeader();
-        if (!authHeader) throw new Error('User not authenticated');
+    async deleteReservation(reservationId: string, isGuest: boolean = false): Promise<void> {
+        if (isGuest) {
+            // For guest users, use the guest endpoint
+            const response = await fetch(`${API_URL}/api/reservations/guest/${reservationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Important for session cookies
+            });
 
-        const response = await fetch(`${API_URL}/api/reservations/${reservationId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': authHeader,
-                'Content-Type': 'application/json',
-            },
-        });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to delete guest reservation');
+            }
+        } else {
+            // For authenticated users, use the authenticated endpoint
+            const authHeader = await this.getAuthHeader();
+            if (!authHeader) throw new Error('User not authenticated');
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || 'Failed to delete reservation');
+            const response = await fetch(`${API_URL}/api/reservations/${reservationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': authHeader,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to delete reservation');
+            }
         }
     },
 

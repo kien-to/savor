@@ -21,7 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { Colors } from '../constants/Colors';
 
 const PaymentScreen = () => {
-  const stripe = useStripe();
+  // const stripe = useStripe();
   const router = useRouter();
   const { isGuest, isAuthenticated, userEmail } = useAuth();
   const { 
@@ -29,6 +29,7 @@ const PaymentScreen = () => {
     storeTitle, 
     price, 
     pickUpTime, 
+    // pickUpTimestamp,
     itemsLeft,
     storeImage,
     storeAddress,
@@ -122,7 +123,7 @@ const PaymentScreen = () => {
           discountedPrice: Number(price), // Assuming no discount for now
           pickupTime: pickUpTime.toString(),
           name: customerName,
-          phone: phoneNumber,
+          phone: phoneNumber, 
           email: undefined, // No email for guests
           paymentType: selectedPaymentMethod,
         };

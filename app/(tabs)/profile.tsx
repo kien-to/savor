@@ -116,7 +116,7 @@ const ProfileScreen = () => {
               setReservations(prev => prev.filter(r => r.id !== reservationId));
               
               // Call backend to actually delete the reservation
-              await reservationService.deleteReservation(reservationId);
+              await reservationService.deleteReservation(reservationId, isGuest);
               
               Alert.alert('Thành công', 'Đã xóa đặt chỗ thành công');
             } catch (error) {

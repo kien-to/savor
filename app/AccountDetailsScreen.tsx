@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-// Do NOT read from Firebase user here (can be stale after logout). Always use server profile.
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../constants/Colors';
 import { userService } from '../services/user';
 
@@ -44,6 +44,15 @@ const AccountDetailsScreen = () => {
     try {
       setSaving(true);
       await userService.updateUserProfile({ name, phone, email });
+      
+      // Save to AsyncStorage for use in PaymentScreen
+      if (name) {
+        await AsyncStorage.setItem('customerName', name);
+      }
+      if (phone) {
+        await AsyncStorage.setItem('userPhoneNumber', phone);
+      }
+      
       router.back();
     } catch (e: any) {
       console.error('Save profile error:', e);
