@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
+import { useStoreOwner } from '../context/StoreOwnerContext';
 
 const SettingsScreen = () => {
   const router = useRouter();
   const auth = getAuth();
   const { logout } = useAuth();
+  const { isStoreOwnerMode, toggleStoreOwnerMode, hasStore } = useStoreOwner();
 
   const handleLogout = async () => {
     try {
@@ -21,6 +23,10 @@ const SettingsScreen = () => {
 
   const handleContact = () => {
     router.push('/ContactScreen');
+  };
+
+  const handleStoreOwnerMode = () => {
+    router.push('/StoreOwnerScreen');
   };
 
   const renderSettingsItem = (
@@ -54,6 +60,11 @@ const SettingsScreen = () => {
           () => {
             router.push('/AccountDetailsScreen');
           }
+        )}
+        {renderSettingsItem(
+          <MaterialCommunityIcons name="store-cog" size={24} color="#000" />,
+          'Chế độ chủ cửa hàng',
+          handleStoreOwnerMode
         )}
       </View>
 

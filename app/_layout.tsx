@@ -13,6 +13,8 @@ import { StripeProvider } from "@stripe/stripe-react-native";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "../context/AuthContext";
+import { StoreOwnerProvider } from "../context/StoreOwnerContext";
+import AppWrapper from "../components/AppWrapper";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -35,7 +37,8 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <StripeProvider
+      <StoreOwnerProvider>
+        <StripeProvider
         publishableKey={
           "pk_live_51KtHVXIv6VEkZcYaIHlJAmVeKkAyjmqifbBYHKz3L0arzHYAwvqElkW8s2n0aQm3pMU8QsmyduG1y64Vh5eu4FgZ006d0HjXDf"
         }
@@ -45,7 +48,8 @@ export default function RootLayout() {
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
-                 <Stack>
+          <AppWrapper>
+            <Stack>
                    <Stack.Screen name="index" options={{ headerShown: false }} />
                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                    <Stack.Screen
@@ -140,10 +144,18 @@ export default function RootLayout() {
                        headerShown: false,
                      }}
                    />
-                 </Stack>
-          <StatusBar style="auto" />
+                   <Stack.Screen
+                     name="StoreOwnerScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+            </Stack>
+            <StatusBar style="auto" />
+          </AppWrapper>
         </ThemeProvider>
-      </StripeProvider>
+        </StripeProvider>
+      </StoreOwnerProvider>
     </AuthProvider>
   );
 }
