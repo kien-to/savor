@@ -21,6 +21,8 @@ import { userService } from '../../services/user';
 const ProfileScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [currentReservations, setCurrentReservations] = useState<Reservation[]>([]);
+  const [pastReservations, setPastReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -57,13 +59,29 @@ const ProfileScreen = () => {
   const fetchReservations = async () => {
     try {
       const data = await reservationService.getReservations(isGuest);
-      // const data = await reservationService.getCombinedReservations(isGuest);
-      setReservations(data || []);
+      
+      // Handle new format with currentReservations and pastReservations
+      if (data && typeof data === 'object' && 'currentReservations' in data) {
+        const typedData = data as { currentReservations: Reservation[]; pastReservations: Reservation[]; currentCount: number; pastCount: number };
+        setCurrentReservations(typedData.currentReservations || []);
+        setPastReservations(typedData.pastReservations || []);
+        // For backward compatibility, also set the combined list
+        setReservations([...typedData.currentReservations, ...typedData.pastReservations]);
+      } else {
+        // Handle old format (array)
+        const reservationsArray = Array.isArray(data) ? data : [];
+        setReservations(reservationsArray);
+        setCurrentReservations(reservationsArray);
+        setPastReservations([]);
+      }
+      
       setError(null);
     } catch (err) {
       setError("Failed to load reservations");
       console.error("Error fetching reservations:", err);
       setReservations([]);
+      setCurrentReservations([]);
+      setPastReservations([]);
     } finally {
       setLoading(false);
     }
@@ -260,7 +278,7 @@ const ProfileScreen = () => {
           <ActivityIndicator color={Colors.light.primary} size="large" />
         ) : error ? (
           <Text style={styles.errorText}>{error}</Text>
-        ) : (reservations?.length ?? 0) === 0 ? (
+        ) : (currentReservations?.length ?? 0) === 0 && (pastReservations?.length ?? 0) === 0 ? (
           <>
             <Text style={styles.ordersText}>
               Bạn chưa có đơn hàng nào.
@@ -274,7 +292,25 @@ const ProfileScreen = () => {
           </>
         ) : (
           <View style={styles.reservationsList}>
-            {reservations?.map(renderReservationCard)}
+            {/* Current Reservations */}
+            {currentReservations && currentReservations.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Đơn hàng hiện tại ({currentReservations.length})</Text>
+                {currentReservations.map(renderReservationCard)}
+              </>
+            )}
+            
+            {/* Past Reservations */}
+            {pastReservations && pastReservations.length > 0 && (
+              <>
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Đơn hàng đã qua ({pastReservations.length})</Text>
+                {pastReservations.map((reservation) => (
+                  <View key={reservation.id} style={[styles.reservationCardContainer, { opacity: 0.7 }]}>
+                    {renderReservationCard(reservation)}
+                  </View>
+                ))}
+              </>
+            )}
           </View>
         )}
       </View>
@@ -391,6 +427,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.primary,
+    marginBottom: 12,
+    marginTop: 8,
   },
   findButton: {
     backgroundColor: Colors.light.primary,

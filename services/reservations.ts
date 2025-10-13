@@ -58,7 +58,7 @@ export const reservationService = {
             return null;
         }
     },
-    async getUserReservations(): Promise<Reservation[]> {
+    async getUserReservations(): Promise<Reservation[] | { currentReservations: Reservation[]; pastReservations: Reservation[]; currentCount: number; pastCount: number }> {
         // Try Firebase auth first (for social login users)
         const currentUser = getAuth(firebase).currentUser;
         if (currentUser) {
@@ -86,12 +86,18 @@ export const reservationService = {
                 return [];
             }
 
-            // If data is already an array, return it
+            // Handle new format with currentReservations and pastReservations
+            if (data.currentReservations && data.pastReservations) {
+                // Return the full object with both arrays for UI to handle separately
+                return data;
+            }
+
+            // If data is already an array, return it (backward compatibility)
             if (Array.isArray(data)) {
                 return data;
             }
 
-            // If data has a reservations property that's an array, return it
+            // If data has a reservations property that's an array, return it (backward compatibility)
             if (data.reservations && Array.isArray(data.reservations)) {
                 return data.reservations;
             }
@@ -126,12 +132,18 @@ export const reservationService = {
             return [];
         }
 
-        // If data is already an array, return it
+        // Handle new format with currentReservations and pastReservations
+        if (data.currentReservations && data.pastReservations) {
+            // Return the full object with both arrays for UI to handle separately
+            return data;
+        }
+
+        // If data is already an array, return it (backward compatibility)
         if (Array.isArray(data)) {
             return data;
         }
 
-        // If data has a reservations property that's an array, return it
+        // If data has a reservations property that's an array, return it (backward compatibility)
         if (data.reservations && Array.isArray(data.reservations)) {
             return data.reservations;
         }

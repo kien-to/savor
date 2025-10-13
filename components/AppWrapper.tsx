@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useStoreOwner } from '../context/StoreOwnerContext';
+import { storeOwnerApiService, StoreOwnerReservation, StoreOwnerSettings } from '../services/storeOwnerApi';
 
 interface AppWrapperProps {
   children: React.ReactNode;
@@ -10,63 +11,98 @@ interface AppWrapperProps {
 export default function AppWrapper({ children }: AppWrapperProps) {
   const { isStoreOwnerMode, toggleStoreOwnerMode, hasStore } = useStoreOwner();
   const [activeTab, setActiveTab] = useState<'reservations' | 'settings'>('reservations');
-  const [reservations, setReservations] = useState([
-    {
-      id: '1',
-      customerName: 'Nguyễn Văn An',
-      quantity: 2,
-      totalAmount: 32,
-      pickupTime: '15/1/2024, 6:00',
-      status: 'active' as 'active' | 'picked_up',
-    },
-    {
-      id: '2',
-      customerName: 'Trần Thị Bình',
-      quantity: 1,
-      totalAmount: 16,
-      pickupTime: '15/1/2024, 8:00',
-      status: 'active' as 'active' | 'picked_up',
-    },
-    {
-      id: '3',
-      customerName: 'Lê Minh Cường',
-      quantity: 3,
-      totalAmount: 48,
-      pickupTime: '15/1/2024, 4:00',
-      status: 'picked_up' as 'active' | 'picked_up',
-    },
-  ]);
-  const [storeSettings, setStoreSettings] = useState({
+  const [currentReservations, setCurrentReservations] = useState<StoreOwnerReservation[]>([]);
+  const [pastReservations, setPastReservations] = useState<StoreOwnerReservation[]>([]);
+  const [storeSettings, setStoreSettings] = useState<StoreOwnerSettings>({
     surpriseBoxes: 10,
     price: 16,
+    isSelling: false,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   console.log('AppWrapper - isStoreOwnerMode:', isStoreOwnerMode, 'hasStore:', hasStore);
 
-  const handleMarkAsPickedUp = (reservationId: string, customerName: string) => {
-    console.log(`Marking ${customerName}'s order as picked up`);
-    setReservations(prev => 
-      prev.map(res => 
-        res.id === reservationId 
-          ? { ...res, status: 'picked_up' as const }
-          : res
-      )
-    );
+  // Load data when store owner mode is enabled
+  useEffect(() => {
+    if (isStoreOwnerMode && hasStore) {
+      loadReservations();
+      loadSettings();
+    }
+  }, [isStoreOwnerMode, hasStore]);
+
+  const loadReservations = async () => {
+    try {
+      setIsLoading(true);
+      const data = await storeOwnerApiService.getReservations();
+      setCurrentReservations(data.currentReservations);
+      setPastReservations(data.pastReservations);
+    } catch (error) {
+      console.error('Error loading reservations:', error);
+      Alert.alert('Lỗi', 'Không thể tải danh sách đơn hàng');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadSettings = async () => {
+    try {
+      const settings = await storeOwnerApiService.getSettings();
+      setStoreSettings(settings);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      // Don't show alert for settings as it's not critical
+    }
+  };
+
+  const handleMarkAsPickedUp = async (reservationId: string, customerName: string) => {
+    try {
+      await storeOwnerApiService.updateReservationStatus(reservationId, 'picked_up');
+      // Update both current and past reservations
+      setCurrentReservations(prev => 
+        prev.map(res => 
+          res.id === reservationId 
+            ? { ...res, status: 'picked_up' as const }
+            : res
+        )
+      );
+      setPastReservations(prev => 
+        prev.map(res => 
+          res.id === reservationId 
+            ? { ...res, status: 'picked_up' as const }
+            : res
+        )
+      );
+      Alert.alert('Thành công', `Đã đánh dấu đơn hàng của ${customerName} là đã lấy`);
+    } catch (error) {
+      console.error('Error updating reservation status:', error);
+      Alert.alert('Lỗi', 'Không thể cập nhật trạng thái đơn hàng');
+    }
   };
 
   const handleRefresh = async () => {
     console.log('Refreshing reservations...');
     setIsRefreshing(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Just refresh the current data without changing it
-    // In a real app, this would fetch fresh data from the server
-    setReservations(prev => [...prev]); // Trigger re-render without changing data
-    
-    setIsRefreshing(false);
+    try {
+      await loadReservations();
+    } catch (error) {
+      console.error('Error refreshing reservations:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleUpdateSettings = async (newSettings: Partial<StoreOwnerSettings>) => {
+    try {
+      const updatedSettings = { ...storeSettings, ...newSettings };
+      await storeOwnerApiService.updateSettings(updatedSettings);
+      setStoreSettings(updatedSettings);
+      Alert.alert('Thành công', 'Đã cập nhật cài đặt cửa hàng');
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      Alert.alert('Lỗi', 'Không thể cập nhật cài đặt');
+    }
   };
 
   // If store owner mode is enabled, show the store owner interface
@@ -93,7 +129,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
           {activeTab === 'reservations' ? (
             <View style={styles.tabContent}>
               <View style={styles.tabHeader}>
-                <Text style={styles.tabTitle}>Đơn đặt hàng hôm nay</Text>
+                <Text style={styles.tabTitle}>Đơn đặt hàng</Text>
                 <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing}>
                   <MaterialIcons 
                     name="refresh" 
@@ -104,7 +140,9 @@ export default function AppWrapper({ children }: AppWrapperProps) {
               </View>
               
               <View style={styles.reservationsList}>
-                {reservations.map((reservation) => (
+                {/* Current Reservations */}
+                <Text style={styles.sectionTitle}>Đơn hàng hiện tại ({currentReservations.length})</Text>
+                {currentReservations.map((reservation) => (
                   <View key={reservation.id} style={styles.reservationCard}>
                     <View style={styles.reservationHeader}>
                       <Text style={styles.customerName}>{reservation.customerName}</Text>
@@ -134,6 +172,30 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                     )}
                   </View>
                 ))}
+
+                {/* Past Reservations */}
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Đơn hàng đã qua ({pastReservations.length})</Text>
+                {pastReservations.map((reservation) => (
+                  <View key={reservation.id} style={[styles.reservationCard, { opacity: 0.7 }]}>
+                    <View style={styles.reservationHeader}>
+                      <Text style={styles.customerName}>{reservation.customerName}</Text>
+                      <View style={[
+                        styles.statusBadge, 
+                        { backgroundColor: reservation.status === 'active' ? '#4CAF50' : '#2196F3' }
+                      ]}>
+                        <Text style={styles.statusText}>
+                          {reservation.status === 'active' ? 'Đang chờ' : 'Đã lấy'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.reservationDetails}>
+                      Số lượng: {reservation.quantity} • {reservation.totalAmount.toFixed(0)}.000đ
+                    </Text>
+                    <Text style={styles.pickupTime}>
+                      Lấy hàng: {reservation.pickupTime || 'Chưa xác định'}
+                    </Text>
+                  </View>
+                ))}
               </View>
             </View>
           ) : (
@@ -144,14 +206,14 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                 <View style={styles.settingValue}>
                   <TouchableOpacity 
                     style={styles.valueButton}
-                    onPress={() => setStoreSettings(prev => ({ ...prev, surpriseBoxes: Math.max(1, prev.surpriseBoxes - 1) }))}
+                    onPress={() => handleUpdateSettings({ surpriseBoxes: Math.max(1, storeSettings.surpriseBoxes - 1) })}
                   >
                     <MaterialIcons name="remove" size={20} color="#036B52" />
                   </TouchableOpacity>
                   <Text style={styles.valueText}>{storeSettings.surpriseBoxes}</Text>
                   <TouchableOpacity 
                     style={styles.valueButton}
-                    onPress={() => setStoreSettings(prev => ({ ...prev, surpriseBoxes: prev.surpriseBoxes + 1 }))}
+                    onPress={() => handleUpdateSettings({ surpriseBoxes: storeSettings.surpriseBoxes + 1 })}
                   >
                     <MaterialIcons name="add" size={20} color="#036B52" />
                   </TouchableOpacity>
@@ -162,14 +224,14 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                 <View style={styles.settingValue}>
                   <TouchableOpacity 
                     style={styles.valueButton}
-                    onPress={() => setStoreSettings(prev => ({ ...prev, price: Math.max(1, prev.price - 1) }))}
+                    onPress={() => handleUpdateSettings({ price: Math.max(1, storeSettings.price - 1) })}
                   >
                     <MaterialIcons name="remove" size={20} color="#036B52" />
                   </TouchableOpacity>
                   <Text style={styles.valueText}>{storeSettings.price.toFixed(0)}.000đ</Text>
                   <TouchableOpacity 
                     style={styles.valueButton}
-                    onPress={() => setStoreSettings(prev => ({ ...prev, price: prev.price + 1 }))}
+                    onPress={() => handleUpdateSettings({ price: storeSettings.price + 1 })}
                   >
                     <MaterialIcons name="add" size={20} color="#036B52" />
                   </TouchableOpacity>
@@ -269,6 +331,13 @@ const styles = StyleSheet.create({
   tabTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#036B52',
+    marginBottom: 12,
+    marginTop: 8,
   },
   reservationsList: {
     flex: 1,
