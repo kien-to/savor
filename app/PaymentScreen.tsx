@@ -19,11 +19,12 @@ import { reservationService } from '../services/reservations';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../constants/Colors';
+import { userService } from '../services/user';
 
 const PaymentScreen = () => {
   // const stripe = useStripe();
   const router = useRouter();
-  const { isGuest, isAuthenticated, userEmail } = useAuth();
+  const { isGuest, isAuthenticated, userEmail, userName } = useAuth();
   const { 
     storeId, 
     storeTitle, 
@@ -48,24 +49,39 @@ const PaymentScreen = () => {
 
   const subtotal = Number(price) * quantity;
 
-  // Load stored contact information on component mount
+  // Load stored contact information and hydrate from backend for authenticated users
   useEffect(() => {
-    const loadStoredInfo = async () => {
+    const loadContactInfo = async () => {
       try {
+        // Load any locally stored values first as a fallback
         const storedPhone = await AsyncStorage.getItem('userPhoneNumber');
         const storedName = await AsyncStorage.getItem('customerName');
-        if (storedPhone) {
-          setPhoneNumber(storedPhone);
-        }
-        if (storedName) {
-          setCustomerName(storedName);
+        if (storedPhone) setPhoneNumber(storedPhone);
+        if (storedName) setCustomerName(storedName);
+
+        // If authenticated, fetch profile from backend and override
+        if (isAuthenticated) {
+          try {
+            const profile = await userService.getUserProfile();
+            if (profile?.phone) setPhoneNumber(profile.phone);
+            // Prefer backend name, then auth display name
+            if (profile?.name || profile?.display_name || userName) {
+              setCustomerName(profile.name || profile.display_name || userName || '');
+            }
+          } catch (e) {
+            // Fallback to useAuth values if backend not available
+            if (userName) setCustomerName(prev => prev || userName);
+          }
+        } else {
+          // For guests, no backend profile; keep any locally stored values
+          if (userName) setCustomerName(prev => prev || userName);
         }
       } catch (error) {
-        console.error('Error loading stored contact info:', error);
+        console.error('Error loading contact info:', error);
       }
     };
-    loadStoredInfo();
-  }, []);
+    loadContactInfo();
+  }, [isAuthenticated, userName]);
 
   const handlePayment = async () => {
     // Process payment directly with phone number from the form
@@ -142,6 +158,16 @@ const PaymentScreen = () => {
         );
       } else {
         console.log("Creating authenticated reservation");
+        // Persist latest contact info to backend profile so user isn't re-prompted
+        try {
+          await userService.updateUserProfile({
+            name: customerName || undefined,
+            phone: phoneNumber || undefined,
+            email: userEmail || undefined,
+          });
+        } catch (e) {
+          console.warn('Failed to update user profile before reservation:', e);
+        }
         // NEW WAY: For authenticated users, create reservation directly
         const authenticatedReservationData = {
           storeId: storeId.toString(),

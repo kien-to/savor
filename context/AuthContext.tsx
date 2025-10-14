@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { getAuth, signOut } from 'firebase/auth';
 import firebase from '../config/firebase';
+import { userService } from '../services/user';
 
 interface AuthState {
   token: string | null;
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const isGuest = await AsyncStorage.getItem('isGuest');
         const guestSetupCompleted = await AsyncStorage.getItem('guestSetupCompleted');
         console.log('AuthContext - Retrieved from storage - token:', token, 'userId:', userId, 'userEmail:', userEmail, 'userName:', userName, 'isGuest:', isGuest, 'guestSetupCompleted:', guestSetupCompleted);
+        // Seed initial state from storage
         setAuthState({
           token,
           userId,
@@ -57,6 +59,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           guestSetupCompleted: guestSetupCompleted === 'true',
         });
         console.log('AuthContext - Auth state set, isLoading: false');
+
+        // If authenticated, fetch profile from backend and hydrate state
+        if (token && userId && isGuest !== 'true') {
+          try {
+            const profile = await userService.getUserProfile();
+            const mergedEmail = profile.email || userEmail || null;
+            const mergedName = profile.name || profile.display_name || userName || null;
+            if (mergedEmail) await AsyncStorage.setItem('userEmail', mergedEmail);
+            if (mergedName) await AsyncStorage.setItem('userName', mergedName);
+            setAuthState(prev => ({
+              ...prev,
+              userEmail: mergedEmail,
+              userName: mergedName,
+            }));
+          } catch (e) {
+            console.warn('AuthContext - Unable to fetch profile on init:', e);
+          }
+        }
       } catch (error) {
         console.error('Error initializing auth:', error);
         setAuthState({
@@ -84,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.setItem('userName', name);
     }
     await AsyncStorage.removeItem('isGuest'); // Clear guest mode when logging in
+    // Start with provided values
     setAuthState({ 
       token, 
       userId, 
@@ -93,6 +114,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isGuest: false, 
       guestSetupCompleted: false 
     });
+
+    // Enrich/Upsert profile with Firebase Google info and persist on backend
+    try {
+      const auth = getAuth(firebase);
+      const currentUser = auth.currentUser;
+      const derivedEmail = currentUser?.email || email || null;
+      const derivedName = currentUser?.displayName || name || null;
+      if (derivedEmail || derivedName) {
+        const updated = await userService.updateUserProfile({
+          email: derivedEmail || undefined,
+          name: derivedName || undefined,
+        });
+        const finalEmail = updated.email || derivedEmail || null;
+        const finalName = updated.name || updated.display_name || derivedName || null;
+        if (finalEmail) await AsyncStorage.setItem('userEmail', finalEmail);
+        if (finalName) await AsyncStorage.setItem('userName', finalName);
+        setAuthState(prev => ({
+          ...prev,
+          userEmail: finalEmail,
+          userName: finalName,
+        }));
+      }
+    } catch (e) {
+      console.warn('AuthContext - Failed to upsert profile on login:', e);
+    }
   };
 
   const continueAsGuest = async () => {

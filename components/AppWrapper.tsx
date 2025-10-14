@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useStoreOwner } from '../context/StoreOwnerContext';
 import { storeOwnerApiService, StoreOwnerReservation, StoreOwnerSettings } from '../services/storeOwnerApi';
 
@@ -10,6 +11,7 @@ interface AppWrapperProps {
 
 export default function AppWrapper({ children }: AppWrapperProps) {
   const { isStoreOwnerMode, toggleStoreOwnerMode, hasStore } = useStoreOwner();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'reservations' | 'settings'>('reservations');
   const [currentReservations, setCurrentReservations] = useState<StoreOwnerReservation[]>([]);
   const [pastReservations, setPastReservations] = useState<StoreOwnerReservation[]>([]);
@@ -143,7 +145,30 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                 {/* Current Reservations */}
                 <Text style={styles.sectionTitle}>Đơn hàng hiện tại ({currentReservations.length})</Text>
                 {currentReservations.map((reservation) => (
-                  <View key={reservation.id} style={styles.reservationCard}>
+                  <TouchableOpacity 
+                    key={reservation.id} 
+                    style={styles.reservationCard}
+                    onPress={() => {
+                      router.push({
+                        pathname: "/ReservationDetailScreen",
+                        params: {
+                          reservationId: reservation.id,
+                          storeName: 'Store', // Store owner view - we don't have store name in reservation
+                          storeImage: '', // Store owner view - we don't have store image
+                          storeAddress: '', // Store owner view - we don't have store address
+                          customerName: reservation.customerName,
+                          customerEmail: reservation.customerEmail || '',
+                          phoneNumber: '', // Store owner view - we don't have phone
+                          quantity: reservation.quantity.toString(),
+                          totalAmount: reservation.totalAmount.toString(),
+                          status: reservation.status,
+                          pickupTime: reservation.pickupTime || 'Chưa lên lịch',
+                          createdAt: reservation.createdAt,
+                          paymentType: 'Trả tiền tại cửa hàng',
+                        },
+                      });
+                    }}
+                  >
                     <View style={styles.reservationHeader}>
                       <Text style={styles.customerName}>{reservation.customerName}</Text>
                       <View style={[
@@ -164,19 +189,45 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                     {reservation.status === 'active' && (
                       <TouchableOpacity 
                         style={styles.pickupButton}
-                        onPress={() => handleMarkAsPickedUp(reservation.id, reservation.customerName)}
+                        onPress={(e) => {
+                          e.stopPropagation(); // Prevent card navigation
+                          handleMarkAsPickedUp(reservation.id, reservation.customerName);
+                        }}
                       >
                         <MaterialIcons name="check-circle" size={20} color="#FFF" />
                         <Text style={styles.pickupButtonText}>Đánh dấu đã lấy</Text>
                       </TouchableOpacity>
                     )}
-                  </View>
+                  </TouchableOpacity>
                 ))}
 
                 {/* Past Reservations */}
                 <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Đơn hàng đã qua ({pastReservations.length})</Text>
                 {pastReservations.map((reservation) => (
-                  <View key={reservation.id} style={[styles.reservationCard, { opacity: 0.7 }]}>
+                  <TouchableOpacity 
+                    key={reservation.id} 
+                    style={[styles.reservationCard, { opacity: 0.7 }]}
+                    onPress={() => {
+                      router.push({
+                        pathname: "/ReservationDetailScreen",
+                        params: {
+                          reservationId: reservation.id,
+                          storeName: 'Store', // Store owner view - we don't have store name in reservation
+                          storeImage: '', // Store owner view - we don't have store image
+                          storeAddress: '', // Store owner view - we don't have store address
+                          customerName: reservation.customerName,
+                          customerEmail: reservation.customerEmail || '',
+                          phoneNumber: '', // Store owner view - we don't have phone
+                          quantity: reservation.quantity.toString(),
+                          totalAmount: reservation.totalAmount.toString(),
+                          status: reservation.status,
+                          pickupTime: reservation.pickupTime || 'Chưa lên lịch',
+                          createdAt: reservation.createdAt,
+                          paymentType: 'Trả tiền tại cửa hàng',
+                        },
+                      });
+                    }}
+                  >
                     <View style={styles.reservationHeader}>
                       <Text style={styles.customerName}>{reservation.customerName}</Text>
                       <View style={[
@@ -194,7 +245,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                     <Text style={styles.pickupTime}>
                       Lấy hàng: {reservation.pickupTime || 'Chưa xác định'}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>

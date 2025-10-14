@@ -61,8 +61,8 @@ const ProfileScreen = () => {
       const data = await reservationService.getReservations(isGuest);
       
       // Handle new format with currentReservations and pastReservations
-      if (data && typeof data === 'object' && 'currentReservations' in data) {
-        const typedData = data as { currentReservations: Reservation[]; pastReservations: Reservation[]; currentCount: number; pastCount: number };
+      if (data && typeof data === 'object' && 'currentReservations' in data && 'pastReservations' in data) {
+        const typedData = data as unknown as { currentReservations: Reservation[]; pastReservations: Reservation[]; currentCount: number; pastCount: number };
         setCurrentReservations(typedData.currentReservations || []);
         setPastReservations(typedData.pastReservations || []);
         // For backward compatibility, also set the combined list
@@ -177,8 +177,22 @@ const ProfileScreen = () => {
         style={styles.reservationCard}
         onPress={() => {
           router.push({
-            pathname: "/StoreScreen",
-            params: { storeId: reservation.storeId },
+            pathname: "/ReservationDetailScreen",
+            params: {
+              reservationId: reservation.id,
+              storeName: reservation.storeName,
+              storeImage: reservation.storeImage,
+              storeAddress: reservation.storeAddress,
+              customerName: reservation.customerName || 'Guest User',
+              customerEmail: reservation.customerEmail || '',
+              phoneNumber: reservation.phoneNumber || '',
+              quantity: reservation.quantity.toString(),
+              totalAmount: reservation.totalAmount.toString(),
+              status: reservation.status,
+              pickupTime: reservation.pickupTime || 'Chưa lên lịch',
+              createdAt: reservation.createdAt,
+              paymentType: reservation.paymentType || 'Trả tiền tại cửa hàng',
+            },
           });
         }}
       >

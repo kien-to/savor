@@ -150,6 +150,12 @@ export default function RootLayout() {
                        headerShown: false,
                      }}
                    />
+                   <Stack.Screen
+                     name="ReservationDetailScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
             </Stack>
             <StatusBar style="auto" />
           </AppWrapper>

@@ -23,6 +23,9 @@ export interface Reservation {
     name?: string;
     email?: string;
     phone?: string;
+    customerName?: string;
+    customerEmail?: string;
+    phoneNumber?: string;
 }
 
 export interface ReservationRequest {
