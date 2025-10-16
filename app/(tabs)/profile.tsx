@@ -25,6 +25,7 @@ const ProfileScreen = () => {
   const [pastReservations, setPastReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPastReservations, setShowPastReservations] = useState(false);
   const router = useRouter();
   const { logout, token, isGuest, isAuthenticated, userEmail, userName } = useAuth();
 
@@ -183,8 +184,8 @@ const ProfileScreen = () => {
               storeName: reservation.storeName,
               storeImage: reservation.storeImage,
               storeAddress: reservation.storeAddress,
-              customerName: reservation.customerName || 'Guest User',
-              customerEmail: reservation.customerEmail || '',
+              customerName: userName || reservation.customerName || 'Guest User',
+              customerEmail: userEmail || reservation.customerEmail || '',
               phoneNumber: reservation.phoneNumber || '',
               quantity: reservation.quantity.toString(),
               totalAmount: reservation.totalAmount.toString(),
@@ -317,8 +318,20 @@ const ProfileScreen = () => {
             {/* Past Reservations */}
             {pastReservations && pastReservations.length > 0 && (
               <>
-                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Đơn hàng đã qua ({pastReservations.length})</Text>
-                {pastReservations.map((reservation) => (
+                <TouchableOpacity 
+                  style={styles.pastReservationsHeader}
+                  onPress={() => setShowPastReservations(!showPastReservations)}
+                >
+                  <Text style={[styles.sectionTitle, { marginTop: 20, marginBottom: 0 }]}>
+                    Đơn hàng đã qua ({pastReservations.length})
+                  </Text>
+                  <MaterialIcons 
+                    name={showPastReservations ? "expand-less" : "expand-more"} 
+                    size={24} 
+                    color={Colors.light.primary} 
+                  />
+                </TouchableOpacity>
+                {showPastReservations && pastReservations.map((reservation) => (
                   <View key={reservation.id} style={[styles.reservationCardContainer, { opacity: 0.7 }]}>
                     {renderReservationCard(reservation)}
                   </View>
@@ -569,6 +582,14 @@ const styles = StyleSheet.create({
     color: "#FF4444",
     textAlign: "center",
     marginVertical: 16,
+  },
+  pastReservationsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 12,
+    paddingVertical: 8,
   },
 });
 

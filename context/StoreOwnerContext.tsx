@@ -29,10 +29,13 @@ export function StoreOwnerProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     const initializeStoreOwnerState = async () => {
       try {
-        // Auto-enable store owner mode for testing
+        // Load store owner mode from AsyncStorage
+        const storedMode = await AsyncStorage.getItem('isStoreOwnerMode');
+        const isStoreOwnerMode = storedMode === 'true';
+        
         setState(prev => ({
           ...prev,
-          isStoreOwnerMode: true,
+          isStoreOwnerMode,
           isLoading: false,
         }));
         

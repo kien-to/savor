@@ -153,12 +153,12 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                         pathname: "/ReservationDetailScreen",
                         params: {
                           reservationId: reservation.id,
-                          storeName: 'Store', // Store owner view - we don't have store name in reservation
-                          storeImage: '', // Store owner view - we don't have store image
-                          storeAddress: '', // Store owner view - we don't have store address
+                          storeName: reservation.storeName,
+                          storeImage: reservation.storeImage,
+                          storeAddress: reservation.storeAddress,
                           customerName: reservation.customerName,
                           customerEmail: reservation.customerEmail || '',
-                          phoneNumber: '', // Store owner view - we don't have phone
+                          phoneNumber: reservation.phoneNumber || '',
                           quantity: reservation.quantity.toString(),
                           totalAmount: reservation.totalAmount.toString(),
                           status: reservation.status,
@@ -212,12 +212,12 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                         pathname: "/ReservationDetailScreen",
                         params: {
                           reservationId: reservation.id,
-                          storeName: 'Store', // Store owner view - we don't have store name in reservation
-                          storeImage: '', // Store owner view - we don't have store image
-                          storeAddress: '', // Store owner view - we don't have store address
+                          storeName: reservation.storeName,
+                          storeImage: reservation.storeImage,
+                          storeAddress: reservation.storeAddress,
                           customerName: reservation.customerName,
                           customerEmail: reservation.customerEmail || '',
-                          phoneNumber: '', // Store owner view - we don't have phone
+                          phoneNumber: reservation.phoneNumber || '',
                           quantity: reservation.quantity.toString(),
                           totalAmount: reservation.totalAmount.toString(),
                           status: reservation.status,
@@ -304,7 +304,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
             <MaterialIcons 
               name="receipt" 
               size={24} 
-              color={activeTab === 'reservations' ? '#036B52' : '#666'} 
+              color={activeTab === 'reservations' ? '#004d3d' : '#004d3d'} 
             />
             <Text style={[styles.storeOwnerTabText, activeTab === 'reservations' && styles.activeStoreOwnerTabText]}>
               Đơn hàng
@@ -320,7 +320,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
             <MaterialIcons 
               name="settings" 
               size={24} 
-              color={activeTab === 'settings' ? '#036B52' : '#666'} 
+              color={activeTab === 'settings' ? '#004d3d' : '#004d3d'} 
             />
             <Text style={[styles.storeOwnerTabText, activeTab === 'settings' && styles.activeStoreOwnerTabText]}>
               Cài đặt
@@ -339,7 +339,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
 const styles = StyleSheet.create({
   storeOwnerContainer: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: '#fff6e7',
     position: 'absolute',
     top: 0,
     left: 0,
@@ -353,14 +353,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#036B52',
+    backgroundColor: '#004d3d',
     paddingTop: 50, // Account for status bar
     zIndex: 10000,
   },
   storeOwnerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFF',
+    color: '#fff6e7',
+    fontFamily: 'Montserrat',
   },
   exitButton: {
     padding: 8,
@@ -382,22 +383,27 @@ const styles = StyleSheet.create({
   tabTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#004d3d',
+    fontFamily: 'Montserrat',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#036B52',
+    color: '#004d3d',
     marginBottom: 12,
     marginTop: 8,
+    fontFamily: 'Montserrat',
   },
   reservationsList: {
     flex: 1,
   },
   reservationCard: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#fff6e7',
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#004d3d',
   },
   reservationHeader: {
     flexDirection: 'row',
@@ -408,6 +414,8 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#004d3d',
+    fontFamily: 'Montserrat',
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -421,16 +429,18 @@ const styles = StyleSheet.create({
   },
   reservationDetails: {
     fontSize: 14,
-    color: '#666',
+    color: '#004d3d',
     marginBottom: 4,
+    fontFamily: 'Montserrat',
   },
   pickupTime: {
     fontSize: 14,
-    color: '#666',
+    color: '#004d3d',
     marginBottom: 8,
+    fontFamily: 'Montserrat',
   },
   pickupButton: {
-    backgroundColor: '#036B52',
+    backgroundColor: '#004d3d',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -439,10 +449,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   pickupButtonText: {
-    color: '#FFF',
+    color: '#fff6e7',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 4,
+    fontFamily: 'Montserrat',
   },
   settingItem: {
     marginBottom: 24,
@@ -492,11 +503,13 @@ const styles = StyleSheet.create({
   },
   storeOwnerTabText: {
     fontSize: 12,
-    color: '#666',
+    color: '#004d3d',
     marginTop: 4,
+    fontFamily: 'Montserrat',
   },
   activeStoreOwnerTabText: {
-    color: '#036B52',
+    color: '#004d3d',
     fontWeight: '600',
+    fontFamily: 'Montserrat',
   },
 });

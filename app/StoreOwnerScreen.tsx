@@ -258,7 +258,7 @@ const StoreOwnerScreen = () => {
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Store Owner Mode</Text>
+          <Text style={styles.headerTitle}>Chế độ chủ cửa hàng</Text>
           <View style={styles.headerRight} />
         </View>
         <View style={styles.authRequired}>
@@ -286,7 +286,7 @@ const StoreOwnerScreen = () => {
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Store Owner Mode</Text>
+          <Text style={styles.headerTitle}>Chế độ chủ cửa hàng</Text>
           <View style={styles.headerRight} />
         </View>
         {renderNoStorePrompt()}
@@ -300,15 +300,15 @@ const StoreOwnerScreen = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Store Owner Mode</Text>
+        <Text style={styles.headerTitle}>Chế độ chủ cửa hàng</Text>
         <View style={styles.headerRight} />
       </View>
 
       {/* Store Owner Mode Toggle */}
       <View style={styles.toggleContainer}>
         <View style={styles.toggleInfo}>
-          <Text style={styles.toggleLabel}>Store Owner Mode</Text>
-          <Text style={styles.toggleDescription}>Manage your store and reservations</Text>
+          <Text style={styles.toggleLabel}>Chế độ chủ cửa hàng</Text>
+          <Text style={styles.toggleDescription}>Quản lý cửa hàng và đơn đặt hàng</Text>
         </View>
         <Switch
           value={isStoreOwnerMode}
