@@ -36,7 +36,7 @@ const StoreListScreen = () => {
         <Text style={styles.cardPickupTime}>{item.pickUpTime}</Text>
         <View style={styles.cardFooter}>
           <Text style={styles.cardDistance}>{item.distance}</Text>
-          <Text style={styles.cardPrice}>${item.price.toFixed(2)}</Text>
+          <Text style={styles.cardPrice}>{(item.price * 1000).toLocaleString('vi-VN')}đ</Text>
         </View>
       </View>
     </TouchableOpacity>

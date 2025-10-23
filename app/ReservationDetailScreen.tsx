@@ -47,14 +47,16 @@ const ReservationDetailScreen = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return '#4CAF50';
-      case 'picked_up':
-        return '#2196F3';
+      case 'pending':
+        return '#FF9800'; // Orange
       case 'confirmed':
-        return '#4CAF50';
+        return '#4CAF50'; // Green
       case 'completed':
-        return '#2196F3';
+        return '#2196F3'; // Blue
+      case 'cancelled':
+        return '#F44336'; // Red
+      case 'expired':
+        return '#999'; // Gray
       default:
         return '#666';
     }
@@ -62,14 +64,16 @@ const ReservationDetailScreen = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'Đang chờ';
-      case 'picked_up':
-        return 'Đã lấy';
+      case 'pending':
+        return 'Chờ xác nhận';
       case 'confirmed':
         return 'Đã xác nhận';
       case 'completed':
-        return 'Hoàn thành';
+        return 'Đã hoàn thành';
+      case 'cancelled':
+        return 'Đã hủy';
+      case 'expired':
+        return 'Hết hạn';
       default:
         return status;
     }
@@ -81,7 +85,18 @@ const ReservationDetailScreen = () => {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => {
+            try {
+              // @ts-ignore expo-router runtime provides canGoBack on router
+              if ((router as any).canGoBack?.()) {
+                router.back();
+              } else {
+                router.replace('/');
+              }
+            } catch {
+              router.replace('/');
+            }
+          }}
         >
           <MaterialIcons name="arrow-back" size={24} color={Colors.light.primary} />
         </TouchableOpacity>

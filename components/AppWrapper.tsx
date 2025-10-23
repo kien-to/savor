@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useStoreOwner } from '../context/StoreOwnerContext';
@@ -16,12 +16,56 @@ export default function AppWrapper({ children }: AppWrapperProps) {
   const [currentReservations, setCurrentReservations] = useState<StoreOwnerReservation[]>([]);
   const [pastReservations, setPastReservations] = useState<StoreOwnerReservation[]>([]);
   const [storeSettings, setStoreSettings] = useState<StoreOwnerSettings>({
+    title: '',
+    description: '',
+    address: '',
+    imageUrl: '',
+    backgroundUrl: '',
+    avatarUrl: '',
+    originalPrice: 0,
+    discountedPrice: 0,
+    price: 0,
     surpriseBoxes: 10,
-    price: 16,
+    pickupTime: '',
     isSelling: false,
   });
+  const [originalSettings, setOriginalSettings] = useState<StoreOwnerSettings>({
+    title: '',
+    description: '',
+    address: '',
+    imageUrl: '',
+    backgroundUrl: '',
+    avatarUrl: '',
+    originalPrice: 0,
+    discountedPrice: 0,
+    price: 0,
+    surpriseBoxes: 10,
+    pickupTime: '',
+    isSelling: false,
+  });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [pendingReservationParams, setPendingReservationParams] = useState<
+    | {
+        reservationId: string;
+        storeName: string;
+        storeImage: string;
+        storeAddress: string;
+        customerName: string;
+        customerEmail: string;
+        phoneNumber: string;
+        quantity: string;
+        totalAmount: string;
+        status: string;
+        pickupTime: string;
+        createdAt: string;
+        paymentType: string;
+      }
+    | null
+  >(null);
 
   console.log('AppWrapper - isStoreOwnerMode:', isStoreOwnerMode, 'hasStore:', hasStore);
 
@@ -32,6 +76,19 @@ export default function AppWrapper({ children }: AppWrapperProps) {
       loadSettings();
     }
   }, [isStoreOwnerMode, hasStore]);
+
+  // Navigate to reservation detail only after overlay closes
+  useEffect(() => {
+    if (!isStoreOwnerMode && pendingReservationParams) {
+      // Use a small delay to ensure overlay is fully closed before navigating
+      const timer = setTimeout(() => {
+        router.push({ pathname: "/ReservationDetailScreen", params: pendingReservationParams });
+        setPendingReservationParams(null);
+        setIsNavigating(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isStoreOwnerMode, pendingReservationParams]);
 
   const loadReservations = async () => {
     try {
@@ -51,6 +108,8 @@ export default function AppWrapper({ children }: AppWrapperProps) {
     try {
       const settings = await storeOwnerApiService.getSettings();
       setStoreSettings(settings);
+      setOriginalSettings(settings);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Error loading settings:', error);
       // Don't show alert for settings as it's not critical
@@ -59,7 +118,10 @@ export default function AppWrapper({ children }: AppWrapperProps) {
 
   const handleMarkAsPickedUp = async (reservationId: string, customerName: string) => {
     try {
-      await storeOwnerApiService.updateReservationStatus(reservationId, 'picked_up');
+      console.log('Marking reservation as picked up:', reservationId);
+      const response = await storeOwnerApiService.updateReservationStatus(reservationId, 'picked_up');
+      console.log('Update response:', response);
+      
       // Update both current and past reservations
       setCurrentReservations(prev => 
         prev.map(res => 
@@ -75,10 +137,15 @@ export default function AppWrapper({ children }: AppWrapperProps) {
             : res
         )
       );
+      
+      // Refresh reservations to get the latest data
+      await loadReservations();
+      
       Alert.alert('Thành công', `Đã đánh dấu đơn hàng của ${customerName} là đã lấy`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating reservation status:', error);
-      Alert.alert('Lỗi', 'Không thể cập nhật trạng thái đơn hàng');
+      console.error('Error message:', error.message);
+      Alert.alert('Lỗi', error.message || 'Không thể cập nhật trạng thái đơn hàng');
     }
   };
 
@@ -95,20 +162,72 @@ export default function AppWrapper({ children }: AppWrapperProps) {
     }
   };
 
-  const handleUpdateSettings = async (newSettings: Partial<StoreOwnerSettings>) => {
+  const handleUpdateSettings = (newSettings: Partial<StoreOwnerSettings>) => {
+    const updatedSettings = { ...storeSettings, ...newSettings };
+    setStoreSettings(updatedSettings);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSaveSettings = async () => {
     try {
-      const updatedSettings = { ...storeSettings, ...newSettings };
-      await storeOwnerApiService.updateSettings(updatedSettings);
-      setStoreSettings(updatedSettings);
-      Alert.alert('Thành công', 'Đã cập nhật cài đặt cửa hàng');
+      setIsSavingSettings(true);
+      await storeOwnerApiService.updateSettings(storeSettings);
+      setOriginalSettings(storeSettings);
+      setHasUnsavedChanges(false);
+      Alert.alert('Thành công', 'Đã lưu cài đặt cửa hàng');
     } catch (error) {
-      console.error('Error updating settings:', error);
-      Alert.alert('Lỗi', 'Không thể cập nhật cài đặt');
+      console.error('Error saving settings:', error);
+      Alert.alert('Lỗi', 'Không thể lưu cài đặt');
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
-  // If store owner mode is enabled, show the store owner interface
-  if (isStoreOwnerMode && hasStore) {
+  const handleCancelSettings = () => {
+    setStoreSettings(originalSettings);
+    setHasUnsavedChanges(false);
+  };
+
+  const getStatusText = (status: string): string => {
+    switch (status) {
+      case 'pending':
+        return 'Chờ xác nhận';
+      case 'confirmed':
+        return 'Đã xác nhận';
+      case 'completed':
+        return 'Đã hoàn thành';
+      case 'picked_up':
+        return 'Đã lấy hàng';
+      case 'cancelled':
+        return 'Đã hủy';
+      case 'expired':
+        return 'Hết hạn';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'pending':
+        return '#FF9800'; // Orange
+      case 'confirmed':
+        return '#4CAF50'; // Green
+      case 'completed':
+        return '#2196F3'; // Blue
+      case 'picked_up':
+        return '#00BCD4'; // Cyan - successfully picked up
+      case 'cancelled':
+        return '#F44336'; // Red
+      case 'expired':
+        return '#999'; // Gray
+      default:
+        return '#999';
+    }
+  };
+
+  // If navigating, suppress overlay render to prevent flash
+  if (isStoreOwnerMode && hasStore && !isNavigating) {
     console.log('Rendering store owner interface');
     return (
       <View style={styles.storeOwnerContainer} pointerEvents="auto">
@@ -141,42 +260,22 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                 </TouchableOpacity>
               </View>
               
-              <View style={styles.reservationsList}>
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 140 }}>
                 {/* Current Reservations */}
-                <Text style={styles.sectionTitle}>Đơn hàng hiện tại ({currentReservations.length})</Text>
-                {currentReservations.map((reservation) => (
-                  <TouchableOpacity 
+                <Text style={styles.sectionTitle}>Đơn hàng hiện tại ({(currentReservations?.length ?? 0)})</Text>
+                {(currentReservations ?? []).map((reservation) => (
+                  <View 
                     key={reservation.id} 
                     style={styles.reservationCard}
-                    onPress={() => {
-                      router.push({
-                        pathname: "/ReservationDetailScreen",
-                        params: {
-                          reservationId: reservation.id,
-                          storeName: reservation.storeName,
-                          storeImage: reservation.storeImage,
-                          storeAddress: reservation.storeAddress,
-                          customerName: reservation.customerName,
-                          customerEmail: reservation.customerEmail || '',
-                          phoneNumber: reservation.phoneNumber || '',
-                          quantity: reservation.quantity.toString(),
-                          totalAmount: reservation.totalAmount.toString(),
-                          status: reservation.status,
-                          pickupTime: reservation.pickupTime || 'Chưa lên lịch',
-                          createdAt: reservation.createdAt,
-                          paymentType: 'Trả tiền tại cửa hàng',
-                        },
-                      });
-                    }}
                   >
                     <View style={styles.reservationHeader}>
                       <Text style={styles.customerName}>{reservation.customerName}</Text>
                       <View style={[
                         styles.statusBadge, 
-                        { backgroundColor: reservation.status === 'active' ? '#4CAF50' : '#2196F3' }
+                        { backgroundColor: getStatusColor(reservation.status) }
                       ]}>
                         <Text style={styles.statusText}>
-                          {reservation.status === 'active' ? 'Đang chờ' : 'Đã lấy'}
+                          {getStatusText(reservation.status)}
                         </Text>
                       </View>
                     </View>
@@ -186,7 +285,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                     <Text style={styles.pickupTime}>
                       Lấy hàng: {reservation.pickupTime}
                     </Text>
-                    {reservation.status === 'active' && (
+                    {(reservation.status !== 'completed' && reservation.status !== 'cancelled' && reservation.status !== 'picked_up') && (
                       <TouchableOpacity 
                         style={styles.pickupButton}
                         onPress={(e) => {
@@ -198,44 +297,35 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                         <Text style={styles.pickupButtonText}>Đánh dấu đã lấy</Text>
                       </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
+                    {/* Contact Info */}
+                    {(reservation.phoneNumber || reservation.customerEmail) && (
+                      <View style={styles.contactInfo}>
+                        {reservation.phoneNumber && (
+                          <Text style={styles.contactText}>📞 {reservation.phoneNumber}</Text>
+                        )}
+                        {reservation.customerEmail && (
+                          <Text style={styles.contactText}>📧 {reservation.customerEmail}</Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
                 ))}
 
                 {/* Past Reservations */}
-                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Đơn hàng đã qua ({pastReservations.length})</Text>
-                {pastReservations.map((reservation) => (
-                  <TouchableOpacity 
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Đơn hàng đã qua ({(pastReservations?.length ?? 0)})</Text>
+                {(pastReservations ?? []).map((reservation) => (
+                  <View 
                     key={reservation.id} 
                     style={[styles.reservationCard, { opacity: 0.7 }]}
-                    onPress={() => {
-                      router.push({
-                        pathname: "/ReservationDetailScreen",
-                        params: {
-                          reservationId: reservation.id,
-                          storeName: reservation.storeName,
-                          storeImage: reservation.storeImage,
-                          storeAddress: reservation.storeAddress,
-                          customerName: reservation.customerName,
-                          customerEmail: reservation.customerEmail || '',
-                          phoneNumber: reservation.phoneNumber || '',
-                          quantity: reservation.quantity.toString(),
-                          totalAmount: reservation.totalAmount.toString(),
-                          status: reservation.status,
-                          pickupTime: reservation.pickupTime || 'Chưa lên lịch',
-                          createdAt: reservation.createdAt,
-                          paymentType: 'Trả tiền tại cửa hàng',
-                        },
-                      });
-                    }}
                   >
                     <View style={styles.reservationHeader}>
                       <Text style={styles.customerName}>{reservation.customerName}</Text>
                       <View style={[
                         styles.statusBadge, 
-                        { backgroundColor: reservation.status === 'active' ? '#4CAF50' : '#2196F3' }
+                        { backgroundColor: getStatusColor(reservation.status) }
                       ]}>
                         <Text style={styles.statusText}>
-                          {reservation.status === 'active' ? 'Đang chờ' : 'Đã lấy'}
+                          {getStatusText(reservation.status)}
                         </Text>
                       </View>
                     </View>
@@ -245,49 +335,213 @@ export default function AppWrapper({ children }: AppWrapperProps) {
                     <Text style={styles.pickupTime}>
                       Lấy hàng: {reservation.pickupTime || 'Chưa xác định'}
                     </Text>
-                  </TouchableOpacity>
+                    {/* Contact Info */}
+                    {(reservation.phoneNumber || reservation.customerEmail) && (
+                      <View style={styles.contactInfo}>
+                        {reservation.phoneNumber && (
+                          <Text style={styles.contactText}>📞 {reservation.phoneNumber}</Text>
+                        )}
+                        {reservation.customerEmail && (
+                          <Text style={styles.contactText}>📧 {reservation.customerEmail}</Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
                 ))}
-              </View>
+              </ScrollView>
             </View>
           ) : (
             <View style={styles.tabContent}>
               <Text style={styles.tabTitle}>Cài đặt cửa hàng</Text>
-              <View style={styles.settingItem}>
-                <Text style={styles.settingLabel}>Số túi đồ ăn bất ngờ</Text>
-                <View style={styles.settingValue}>
-                  <TouchableOpacity 
-                    style={styles.valueButton}
-                    onPress={() => handleUpdateSettings({ surpriseBoxes: Math.max(1, storeSettings.surpriseBoxes - 1) })}
-                  >
-                    <MaterialIcons name="remove" size={20} color="#036B52" />
-                  </TouchableOpacity>
-                  <Text style={styles.valueText}>{storeSettings.surpriseBoxes}</Text>
-                  <TouchableOpacity 
-                    style={styles.valueButton}
-                    onPress={() => handleUpdateSettings({ surpriseBoxes: storeSettings.surpriseBoxes + 1 })}
-                  >
-                    <MaterialIcons name="add" size={20} color="#036B52" />
-                  </TouchableOpacity>
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 140 }}>
+                {/* Basic Information */}
+                <Text style={styles.sectionHeader}>Thông tin cơ bản</Text>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Tên cửa hàng *</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={storeSettings.title}
+                    onChangeText={(text) => handleUpdateSettings({ title: text })}
+                    placeholder="Nhập tên cửa hàng"
+                    placeholderTextColor="#999"
+                  />
                 </View>
-              </View>
-              <View style={styles.settingItem}>
-                <Text style={styles.settingLabel}>Giá mỗi túi</Text>
-                <View style={styles.settingValue}>
-                  <TouchableOpacity 
-                    style={styles.valueButton}
-                    onPress={() => handleUpdateSettings({ price: Math.max(1, storeSettings.price - 1) })}
-                  >
-                    <MaterialIcons name="remove" size={20} color="#036B52" />
-                  </TouchableOpacity>
-                  <Text style={styles.valueText}>{storeSettings.price.toFixed(0)}.000đ</Text>
-                  <TouchableOpacity 
-                    style={styles.valueButton}
-                    onPress={() => handleUpdateSettings({ price: storeSettings.price + 1 })}
-                  >
-                    <MaterialIcons name="add" size={20} color="#036B52" />
-                  </TouchableOpacity>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Mô tả</Text>
+                  <TextInput
+                    style={[styles.textInput, styles.textArea]}
+                    value={storeSettings.description}
+                    onChangeText={(text) => handleUpdateSettings({ description: text })}
+                    placeholder="Mô tả về cửa hàng của bạn"
+                    placeholderTextColor="#999"
+                    multiline
+                    numberOfLines={3}
+                  />
                 </View>
-              </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Địa chỉ</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={storeSettings.address}
+                    onChangeText={(text) => handleUpdateSettings({ address: text })}
+                    placeholder="Nhập địa chỉ cửa hàng"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+
+                {/* Images */}
+                <Text style={styles.sectionHeader}>Hình ảnh</Text>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>URL Hình ảnh chính</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={storeSettings.imageUrl}
+                    onChangeText={(text) => handleUpdateSettings({ imageUrl: text })}
+                    placeholder="https://..."
+                    placeholderTextColor="#999"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>URL Hình nền</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={storeSettings.backgroundUrl}
+                    onChangeText={(text) => handleUpdateSettings({ backgroundUrl: text })}
+                    placeholder="https://..."
+                    placeholderTextColor="#999"
+                  />
+                </View>
+
+                {/* Pricing */}
+                <Text style={styles.sectionHeader}>Giá cả</Text>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Giá gốc (1.000đ)</Text>
+                  <View style={styles.numberInputContainer}>
+                    <TouchableOpacity 
+                      style={styles.valueButton}
+                      onPress={() => handleUpdateSettings({ originalPrice: Math.max(0, storeSettings.originalPrice - 1) })}
+                    >
+                      <MaterialIcons name="remove" size={20} color="#036B52" />
+                    </TouchableOpacity>
+                    <TextInput
+                      style={styles.numberInput}
+                      value={storeSettings.originalPrice.toString()}
+                      onChangeText={(text) => {
+                        const num = parseFloat(text) || 0;
+                        handleUpdateSettings({ originalPrice: num });
+                      }}
+                      keyboardType="numeric"
+                    />
+                    <TouchableOpacity 
+                      style={styles.valueButton}
+                      onPress={() => handleUpdateSettings({ originalPrice: storeSettings.originalPrice + 1 })}
+                    >
+                      <MaterialIcons name="add" size={20} color="#036B52" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Giá khuyến mãi (1.000đ)</Text>
+                  <View style={styles.numberInputContainer}>
+                    <TouchableOpacity 
+                      style={styles.valueButton}
+                      onPress={() => handleUpdateSettings({ discountedPrice: Math.max(0, storeSettings.discountedPrice - 1) })}
+                    >
+                      <MaterialIcons name="remove" size={20} color="#036B52" />
+                    </TouchableOpacity>
+                    <TextInput
+                      style={styles.numberInput}
+                      value={storeSettings.discountedPrice.toString()}
+                      onChangeText={(text) => {
+                        const num = parseFloat(text) || 0;
+                        handleUpdateSettings({ discountedPrice: num });
+                      }}
+                      keyboardType="numeric"
+                    />
+                    <TouchableOpacity 
+                      style={styles.valueButton}
+                      onPress={() => handleUpdateSettings({ discountedPrice: storeSettings.discountedPrice + 1 })}
+                    >
+                      <MaterialIcons name="add" size={20} color="#036B52" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Availability */}
+                <Text style={styles.sectionHeader}>Sẵn có</Text>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Số túi còn lại</Text>
+                  <View style={styles.numberInputContainer}>
+                    <TouchableOpacity 
+                      style={styles.valueButton}
+                      onPress={() => handleUpdateSettings({ surpriseBoxes: Math.max(0, storeSettings.surpriseBoxes - 1) })}
+                    >
+                      <MaterialIcons name="remove" size={20} color="#036B52" />
+                    </TouchableOpacity>
+                    <TextInput
+                      style={styles.numberInput}
+                      value={storeSettings.surpriseBoxes.toString()}
+                      onChangeText={(text) => {
+                        const num = parseInt(text) || 0;
+                        handleUpdateSettings({ surpriseBoxes: num });
+                      }}
+                      keyboardType="numeric"
+                    />
+                    <TouchableOpacity 
+                      style={styles.valueButton}
+                      onPress={() => handleUpdateSettings({ surpriseBoxes: storeSettings.surpriseBoxes + 1 })}
+                    >
+                      <MaterialIcons name="add" size={20} color="#036B52" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Thời gian lấy hàng</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={storeSettings.pickupTime}
+                    onChangeText={(text) => handleUpdateSettings({ pickupTime: text })}
+                    placeholder="Ví dụ: 5:00 PM - 8:00 PM"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+
+                {/* Save/Cancel Buttons */}
+                {hasUnsavedChanges && (
+                  <View style={styles.settingsActions}>
+                    <TouchableOpacity 
+                      style={styles.cancelButton}
+                      onPress={handleCancelSettings}
+                      disabled={isSavingSettings}
+                    >
+                      <Text style={styles.cancelButtonText}>Hủy</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.saveButton}
+                      onPress={handleSaveSettings}
+                      disabled={isSavingSettings}
+                    >
+                      {isSavingSettings ? (
+                        <Text style={styles.saveButtonText}>Đang lưu...</Text>
+                      ) : (
+                        <>
+                          <MaterialIcons name="check" size={20} color="#fff6e7" />
+                          <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </ScrollView>
             </View>
           )}
         </View>
@@ -455,11 +709,113 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontFamily: 'Montserrat',
   },
+  contactInfo: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  contactText: {
+    fontSize: 13,
+    color: '#004d3d',
+    marginBottom: 4,
+    fontFamily: 'Montserrat',
+  },
   settingItem: {
     marginBottom: 24,
     padding: 16,
     backgroundColor: '#F8F9FA',
     borderRadius: 8,
+  },
+  settingsActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#E0E0E0',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    color: '#004d3d',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Montserrat',
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: '#004d3d',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  saveButtonText: {
+    color: '#fff6e7',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Montserrat',
+    marginLeft: 4,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#004d3d',
+    marginTop: 20,
+    marginBottom: 12,
+    fontFamily: 'Montserrat',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#004d3d',
+    marginBottom: 8,
+    fontFamily: 'Montserrat',
+  },
+  textInput: {
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#D0D0D0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#004d3d',
+    fontFamily: 'Montserrat',
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  numberInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#D0D0D0',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  numberInput: {
+    flex: 1,
+    fontSize: 16,
+    textAlign: 'center',
+    paddingVertical: 8,
+    color: '#004d3d',
+    fontFamily: 'Montserrat',
   },
   settingLabel: {
     fontSize: 16,

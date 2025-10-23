@@ -28,6 +28,8 @@ const PaymentScreen = () => {
   const { 
     storeId, 
     storeTitle, 
+    originalPrice,
+    discountedPrice,
     price, 
     pickUpTime, 
     // pickUpTimestamp,
@@ -47,7 +49,15 @@ const PaymentScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customerName, setCustomerName] = useState('');
 
-  const subtotal = Number(price) * quantity;
+  // Use discounted price if available, otherwise fallback to price
+  const actualPrice = Number(discountedPrice) || Number(price);
+  const originalPriceValue = Number(originalPrice) || actualPrice;
+  const subtotal = actualPrice * quantity;
+
+  // Format VND currency (multiply by 1000 to convert to proper VND)
+  const formatVND = (amount: number) => {
+    return `${(amount * 1000).toLocaleString('vi-VN')}đ`;
+  };
 
   // Load stored contact information and hydrate from backend for authenticated users
   useEffect(() => {
@@ -135,8 +145,8 @@ const PaymentScreen = () => {
           storeLongitude: Number(storeLongitude) || 0,
           quantity,
           totalAmount: subtotal,
-          originalPrice: Number(price),
-          discountedPrice: Number(price), // Assuming no discount for now
+          originalPrice: originalPriceValue,
+          discountedPrice: actualPrice,
           pickupTime: pickUpTime.toString(),
           name: customerName,
           phone: phoneNumber, 
@@ -178,8 +188,8 @@ const PaymentScreen = () => {
           storeLongitude: Number(storeLongitude) || 0,
           quantity,
           totalAmount: subtotal,
-          originalPrice: Number(price),
-          discountedPrice: Number(price), // Assuming no discount for now
+          originalPrice: originalPriceValue,
+          discountedPrice: actualPrice,
           pickupTime: pickUpTime.toString(),
           name: customerName,
           phone: phoneNumber,
@@ -289,17 +299,31 @@ const PaymentScreen = () => {
         {/* Order Summary */}
         <View style={styles.orderSummaryContainer}>
           <Text style={styles.sectionTitle}>CHI TIẾT ĐƠN HÀNG</Text>
+          {originalPriceValue > actualPrice && (
+            <View style={styles.orderRow}>
+              <Text style={styles.orderText}>Giá gốc</Text>
+              <Text style={[styles.orderText, styles.strikethrough]}>{formatVND(originalPriceValue * quantity)}</Text>
+            </View>
+          )}
           <View style={styles.orderRow}>
-            <Text style={styles.orderText}>Tạm tính</Text>
-            <Text style={styles.orderText}>${subtotal.toFixed(2)}</Text>
+            <Text style={styles.orderText}>
+              {originalPriceValue > actualPrice ? 'Giá khuyến mãi' : 'Tạm tính'}
+            </Text>
+            <Text style={[styles.orderText, originalPriceValue > actualPrice && styles.discountPrice]}>
+              {formatVND(subtotal)}
+            </Text>
           </View>
-          <View style={styles.orderRow}>
-            <Text style={styles.orderText}>Thuế</Text>
-            <Text style={styles.orderText}>$0.00</Text>
-          </View>
+          {originalPriceValue > actualPrice && (
+            <View style={styles.orderRow}>
+              <Text style={styles.savingsText}>
+                Bạn tiết kiệm được {formatVND((originalPriceValue - actualPrice) * quantity)}!
+              </Text>
+            </View>
+          )}
+          <View style={styles.divider} />
           <View style={styles.orderRow}>
             <Text style={styles.orderTotalText}>Tổng cộng</Text>
-            <Text style={styles.orderTotalText}>${subtotal.toFixed(2)}</Text>
+            <Text style={styles.orderTotalText}>{formatVND(subtotal)}</Text>
           </View>
         </View>
 
@@ -557,6 +581,25 @@ const styles = StyleSheet.create({
   orderText: {
     fontSize: 14,
     color: '#666',
+  },
+  strikethrough: {
+    textDecorationLine: 'line-through',
+    color: '#999',
+  },
+  discountPrice: {
+    color: Colors.light.primary,
+    fontWeight: '600',
+  },
+  savingsText: {
+    fontSize: 14,
+    color: Colors.light.primary,
+    fontWeight: '600',
+    fontStyle: 'italic',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 8,
   },
   orderTotalText: {
     fontSize: 16,

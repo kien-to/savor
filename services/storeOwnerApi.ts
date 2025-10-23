@@ -9,7 +9,7 @@ interface StoreOwnerReservation {
   phoneNumber: string;
   quantity: number;
   totalAmount: number;
-  status: 'active' | 'picked_up';
+  status: 'confirmed' | 'completed' | 'pending' | 'cancelled' | 'expired' | 'picked_up';
   pickupTime?: string;
   pickupTimestamp?: string;
   createdAt: string;
@@ -19,8 +19,24 @@ interface StoreOwnerReservation {
 }
 
 interface StoreOwnerSettings {
-  surpriseBoxes: number;
+  // Basic Info
+  title: string;
+  description: string;
+  address: string;
+
+  // Images
+  imageUrl: string;
+  backgroundUrl: string;
+  avatarUrl: string;
+
+  // Pricing
+  originalPrice: number;
+  discountedPrice: number;
   price: number;
+
+  // Availability
+  surpriseBoxes: number;
+  pickupTime: string;
   isSelling: boolean;
 }
 
@@ -131,7 +147,7 @@ class StoreOwnerApiService {
   }
 
   // Update reservation status
-  async updateReservationStatus(reservationId: string, status: 'active' | 'picked_up'): Promise<{ message: string; status: string }> {
+  async updateReservationStatus(reservationId: string, status: 'confirmed' | 'completed' | 'picked_up'): Promise<{ message: string; status: string }> {
     return this.makeRequest<{ message: string; status: string }>(`/api/store-owner/reservations/${reservationId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),

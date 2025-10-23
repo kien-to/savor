@@ -11,6 +11,7 @@ interface Store {
   price: number;
   imageUrl: string;
   rating: number;
+  bagsAvailable?: number;
 }
 
 interface HomePageData {

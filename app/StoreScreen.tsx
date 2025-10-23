@@ -24,12 +24,14 @@ interface StoreData {
   pickUpTime: string;
   price: number;
   originalPrice: number;
+  discountedPrice: number;
   backgroundUrl: string;
   avatarUrl: string;
   rating: number;
   reviews: number;
   address: string;
   itemsLeft: number;
+  bagsAvailable?: number;
   highlights: string[];
   isSaved: boolean;
 }
@@ -145,7 +147,7 @@ const StoreDetailScreen = () => {
 
         <View style={styles.avaContainer}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>Còn {storeData?.itemsLeft}+ phần</Text>
+            <Text style={styles.badgeText}>Còn {storeData?.bagsAvailable || storeData?.itemsLeft || 0} túi</Text>
           </View>
 
           <Image
@@ -177,12 +179,25 @@ const StoreDetailScreen = () => {
             <Text style={styles.todayText}>Hôm nay</Text>
           </TouchableOpacity>
           <View style={styles.priceContainer}>
-            <Text style={styles.originalPrice}>
-              ${storeData?.originalPrice.toFixed(2)}
-            </Text>
-            <Text style={styles.currentPrice}>
-              ${storeData?.price.toFixed(2)}
-            </Text>
+            {storeData?.originalPrice && storeData?.discountedPrice && storeData.originalPrice > storeData.discountedPrice ? (
+              <>
+                <Text style={styles.originalPrice}>
+                  {(storeData.originalPrice * 1000).toLocaleString('vi-VN')}đ
+                </Text>
+                <Text style={styles.currentPrice}>
+                  {(storeData.discountedPrice * 1000).toLocaleString('vi-VN')}đ
+                </Text>
+                <View style={styles.savingsBadge}>
+                  <Text style={styles.savingsText}>
+                    -{Math.round(((storeData.originalPrice - storeData.discountedPrice) / storeData.originalPrice) * 100)}%
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <Text style={styles.currentPrice}>
+                {((storeData?.discountedPrice || storeData?.price || 0) * 1000).toLocaleString('vi-VN')}đ
+              </Text>
+            )}
           </View>
         </View>
 
@@ -235,9 +250,15 @@ const StoreDetailScreen = () => {
             params: {
               storeId: storeData?.id,
               storeTitle: storeData?.title,
+              originalPrice: storeData?.originalPrice,
+              discountedPrice: storeData?.discountedPrice,
               price: storeData?.price,
               pickUpTime: storeData?.pickUpTime,
-              itemsLeft: storeData?.itemsLeft
+              itemsLeft: storeData?.bagsAvailable || storeData?.itemsLeft,
+              storeImage: storeData?.avatarUrl || storeData?.backgroundUrl,
+              storeAddress: storeData?.address,
+              storeLatitude: 0, // Add these if available in storeData
+              storeLongitude: 0,
             }
           })}
         >
@@ -326,17 +347,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
+    flexWrap: 'wrap',
   },
   originalPrice: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    color: '#999',
     textDecorationLine: 'line-through',
     marginRight: 8,
   },
   currentPrice: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     color: Colors.light.primary,
+    marginRight: 8,
+  },
+  savingsBadge: {
+    backgroundColor: '#FF4444',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  savingsText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   addressContainer: {
     borderTopWidth: 1,

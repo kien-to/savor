@@ -159,7 +159,7 @@ const LocationPickerScreen = () => {
                   defaultSource={require("../../assets/images/icon.png")}
                 />
                 <Text style={styles.markerPrice}>
-                ${store.price.toFixed(2)}
+                {(store.price * 1000).toLocaleString('vi-VN')}đ
               </Text>
               </View>
             </Marker>

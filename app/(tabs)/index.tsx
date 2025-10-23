@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { homeService } from '../../services/home';
 import * as Location from 'expo-location';
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, RefreshControl, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { storeService } from '../../services/store';
 import { Colors } from '../../constants/Colors';
 
@@ -24,7 +24,10 @@ interface Store {
   pickUpTime: string;
   distance: string;
   price: number;
+  originalPrice?: number;
+  discountedPrice?: number;
   isSaved?: boolean;
+  bagsAvailable?: number;
 }
 
 const HomeScreen = () => {
@@ -103,6 +106,13 @@ const HomeScreen = () => {
   useEffect(() => {
     fetchHomeData();
   }, []);
+
+  // Refresh data when screen comes into focus (e.g., after creating a reservation)
+  useFocusEffect(
+    useCallback(() => {
+      fetchHomeData();
+    }, [])
+  );
 
   useEffect(() => {
     if (!homeData) {
@@ -206,7 +216,7 @@ const HomeScreen = () => {
         />
         <View style={styles.cardBadges}>
           <View style={styles.quantityBadge}>
-            <Text style={styles.quantityText}>Còn 4 túi</Text>
+            <Text style={styles.quantityText}>Còn {item.bagsAvailable || 0} túi</Text>
           </View>
         </View>
       </View>
@@ -218,7 +228,22 @@ const HomeScreen = () => {
         </View>
         <View style={styles.cardFooter}>
           <Text style={styles.cardDistance}>{item.distance}</Text>
-          <Text style={styles.cardPrice}>${item.price.toFixed(2)}</Text>
+          <View style={styles.priceContainer}>
+            {item.originalPrice && item.discountedPrice && item.originalPrice > item.discountedPrice ? (
+              <>
+                <Text style={styles.originalPrice}>
+                  {(item.originalPrice * 1000).toLocaleString('vi-VN')}đ
+                </Text>
+                <Text style={styles.cardPrice}>
+                  {(item.discountedPrice * 1000).toLocaleString('vi-VN')}đ
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.cardPrice}>
+                {((item.discountedPrice || item.price) * 1000).toLocaleString('vi-VN')}đ
+              </Text>
+            )}
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -502,6 +527,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.light.textSecondary,
     fontWeight: '500',
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  originalPrice: {
+    fontSize: 14,
+    color: '#999',
+    textDecorationLine: 'line-through',
+    marginRight: 6,
   },
   cardPrice: {
     fontSize: 18,

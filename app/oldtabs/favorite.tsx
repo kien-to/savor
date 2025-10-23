@@ -133,7 +133,7 @@ const FavoritesScreen = () => {
                     <Text style={styles.ratingText}>{item.rating || 0}</Text>
                     <Text style={styles.distanceText}>{item.distance}</Text>
                   </View>
-                  <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+                  <Text style={styles.price}>{(item.price * 1000).toLocaleString('vi-VN')}đ</Text>
                 </View>
               </View>
             </TouchableOpacity>

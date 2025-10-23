@@ -133,13 +133,25 @@ const StoreOwnerScreen = () => {
   const renderNoStorePrompt = () => (
     <View style={styles.noStoreContainer}>
       <MaterialIcons name="store" size={64} color="#036B52" />
-      <Text style={styles.noStoreTitle}>No Store Found</Text>
+      <Text style={styles.noStoreTitle}>Chưa có cửa hàng</Text>
       <Text style={styles.noStoreDescription}>
-        You don't have a store registered yet. Sign up to start managing your store and reservations.
+        Bạn chưa có cửa hàng nào. Tạo cửa hàng mới để bắt đầu quản lý và bán hàng trên Savor.
       </Text>
-      <TouchableOpacity style={styles.signUpButton} onPress={handleSignUpStore}>
-        <Text style={styles.signUpButtonText}>Sign Up Store</Text>
-      </TouchableOpacity>
+      
+      <View style={styles.storeActionButtons}>
+        <TouchableOpacity 
+          style={styles.createStoreButton} 
+          onPress={() => router.push('/AddBusinessDetailsScreen')}
+        >
+          <MaterialIcons name="add-business" size={24} color="#FFF" />
+          <Text style={styles.createStoreButtonText}>Tạo cửa hàng mới</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUpStore}>
+          <MaterialIcons name="contact-support" size={24} color="#036B52" />
+          <Text style={styles.signUpButtonText}>Tư vấn & Hỗ trợ</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -442,14 +454,39 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 32,
   },
-  signUpButton: {
+  storeActionButtons: {
+    width: '100%',
+    gap: 12,
+  },
+  createStoreButton: {
     backgroundColor: '#036B52',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  createStoreButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  signUpButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#036B52',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   signUpButtonText: {
-    color: '#FFF',
+    color: '#036B52',
     fontSize: 16,
     fontWeight: '600',
   },
