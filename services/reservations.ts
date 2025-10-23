@@ -82,17 +82,31 @@ export const reservationService = {
             }
 
             const data = await response.json();
-            console.log('Reservation data:', data);
+            console.log('=== RESERVATION DATA RECEIVED (Firebase Auth) ===');
+            console.log('Full data object:', JSON.stringify(data, null, 2));
+            console.log('Has currentReservations?', 'currentReservations' in data);
+            console.log('Has pastReservations?', 'pastReservations' in data);
+            console.log('currentReservations length:', data.currentReservations?.length);
+            console.log('pastReservations length:', data.pastReservations?.length);
             
             // If data is null or undefined, return empty array
             if (!data) {
+                console.log('Data is null or undefined, returning empty array');
                 return [];
             }
 
             // Handle new format with currentReservations and pastReservations
-            if (data.currentReservations && data.pastReservations) {
-                // Return the full object with both arrays for UI to handle separately
-                return data;
+            if (data.currentReservations !== undefined || data.pastReservations !== undefined) {
+                console.log('Returning full object with current and past reservations');
+                // Ensure arrays are never null/undefined
+                const result = {
+                    currentReservations: Array.isArray(data.currentReservations) ? data.currentReservations : [],
+                    pastReservations: Array.isArray(data.pastReservations) ? data.pastReservations : [],
+                    currentCount: data.currentCount || 0,
+                    pastCount: data.pastCount || 0,
+                };
+                console.log('Normalized result:', JSON.stringify(result, null, 2));
+                return result;
             }
 
             // If data is already an array, return it (backward compatibility)
@@ -128,17 +142,31 @@ export const reservationService = {
         }
 
         const data = await response.json();
-        console.log('Reservation data:', data);
+        console.log('=== RESERVATION DATA RECEIVED (JWT Auth) ===');
+        console.log('Full data object:', JSON.stringify(data, null, 2));
+        console.log('Has currentReservations?', 'currentReservations' in data);
+        console.log('Has pastReservations?', 'pastReservations' in data);
+        console.log('currentReservations length:', data.currentReservations?.length);
+        console.log('pastReservations length:', data.pastReservations?.length);
         
         // If data is null or undefined, return empty array
         if (!data) {
+            console.log('Data is null or undefined, returning empty array');
             return [];
         }
 
         // Handle new format with currentReservations and pastReservations
-        if (data.currentReservations && data.pastReservations) {
-            // Return the full object with both arrays for UI to handle separately
-            return data;
+        if (data.currentReservations !== undefined || data.pastReservations !== undefined) {
+            console.log('Returning full object with current and past reservations');
+            // Ensure arrays are never null/undefined
+            const result = {
+                currentReservations: Array.isArray(data.currentReservations) ? data.currentReservations : [],
+                pastReservations: Array.isArray(data.pastReservations) ? data.pastReservations : [],
+                currentCount: data.currentCount || 0,
+                pastCount: data.pastCount || 0,
+            };
+            console.log('Normalized result:', JSON.stringify(result, null, 2));
+            return result;
         }
 
         // If data is already an array, return it (backward compatibility)
@@ -174,20 +202,26 @@ export const reservationService = {
             }
 
             const data = await response.json();
-            console.log('Guest reservation data:', data);
+            console.log('=== GUEST RESERVATION DATA RECEIVED ===');
+            console.log('Full data object:', JSON.stringify(data, null, 2));
+            console.log('Is array?', Array.isArray(data));
+            console.log('Array length:', Array.isArray(data) ? data.length : 'N/A');
             
             // If data is null or undefined, return empty array
             if (!data) {
+                console.log('Data is null or undefined, falling back to local');
                 return this.getLocalGuestReservations();
             }
 
             // If data is already an array, return it
             if (Array.isArray(data)) {
+                console.log('Returning array of', data.length, 'guest reservations');
                 return data;
             }
 
             // If data has a reservations property that's an array, return it
             if (data.reservations && Array.isArray(data.reservations)) {
+                console.log('Returning data.reservations array of', data.reservations.length, 'reservations');
                 return data.reservations;
             }
 
@@ -371,8 +405,15 @@ export const reservationService = {
         }
     },
 
-    async getReservations(isGuest: boolean = false): Promise<Reservation[]> {
-        return isGuest ? this.getGuestReservations() : this.getUserReservations();
+    async getReservations(isGuest: boolean = false): Promise<Reservation[] | { currentReservations: Reservation[]; pastReservations: Reservation[]; currentCount: number; pastCount: number }> {
+        console.log('=== getReservations called with isGuest:', isGuest, '===');
+        const result = isGuest ? await this.getGuestReservations() : await this.getUserReservations();
+        console.log('=== getReservations returning ===');
+        console.log('Type:', typeof result);
+        console.log('Is array:', Array.isArray(result));
+        console.log('Has currentReservations:', result && typeof result === 'object' && 'currentReservations' in result);
+        console.log('Result:', JSON.stringify(result, null, 2));
+        return result;
     },
 
     async deleteReservation(reservationId: string, isGuest: boolean = false): Promise<void> {

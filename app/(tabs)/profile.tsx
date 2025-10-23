@@ -59,18 +59,33 @@ const ProfileScreen = () => {
 
   const fetchReservations = async () => {
     try {
+      console.log('=== PROFILE SCREEN: Fetching reservations ===');
+      console.log('isGuest:', isGuest);
+      console.log('isAuthenticated:', isAuthenticated);
+      
       const data = await reservationService.getReservations(isGuest);
+      
+      console.log('=== PROFILE SCREEN: Received data ===');
+      console.log('Data type:', typeof data);
+      console.log('Is array:', Array.isArray(data));
+      console.log('Data keys:', data ? Object.keys(data) : 'null');
+      console.log('Full data:', JSON.stringify(data, null, 2));
       
       // Handle new format with currentReservations and pastReservations
       if (data && typeof data === 'object' && 'currentReservations' in data && 'pastReservations' in data) {
         const typedData = data as unknown as { currentReservations: Reservation[]; pastReservations: Reservation[]; currentCount: number; pastCount: number };
+        console.log('=== Using new format with current/past separation ===');
+        console.log('Current count:', typedData.currentReservations?.length);
+        console.log('Past count:', typedData.pastReservations?.length);
         setCurrentReservations(typedData.currentReservations || []);
         setPastReservations(typedData.pastReservations || []);
         // For backward compatibility, also set the combined list
         setReservations([...typedData.currentReservations, ...typedData.pastReservations]);
       } else {
         // Handle old format (array)
+        console.log('=== Using old format (array) ===');
         const reservationsArray = Array.isArray(data) ? data : [];
+        console.log('Array length:', reservationsArray.length);
         setReservations(reservationsArray);
         setCurrentReservations(reservationsArray);
         setPastReservations([]);
@@ -79,7 +94,7 @@ const ProfileScreen = () => {
       setError(null);
     } catch (err) {
       setError("Failed to load reservations");
-      console.error("Error fetching reservations:", err);
+      console.error("=== ERROR fetching reservations ===", err);
       setReservations([]);
       setCurrentReservations([]);
       setPastReservations([]);
@@ -218,6 +233,10 @@ const ProfileScreen = () => {
           >
             {reservation.status === "confirmed" ? "Đã xác nhận" : 
              reservation.status === "pending" ? "Đang chờ" : 
+             reservation.status === "picked_up" ? "Đã lấy hàng" :
+             reservation.status === "completed" ? "Đã hoàn thành" :
+             reservation.status === "cancelled" ? "Đã hủy" :
+             reservation.status === "expired" ? "Hết hạn" :
              reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
           </Text>
         </View>
