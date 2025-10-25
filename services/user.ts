@@ -61,13 +61,16 @@ export const userService = {
 
     async updateUserProfile(input: { name?: string; phone?: string; email?: string }): Promise<UserProfile> {
         try {
+            console.log('userService.updateUserProfile called with:', input);
+            
             // Try Firebase auth first (for social login users)
             const currentUser = getAuth(firebase).currentUser;
             let authHeader = '';
             
             if (currentUser) {
-                const idToken = await currentUser.getIdToken();
+                const idToken = await currentUser.getIdToken(true); // Force refresh token
                 authHeader = `Bearer ${idToken}`;
+                console.log('Using Firebase auth for profile update');
             } else {
                 // Try JWT token auth (for email login users)
                 const token = await AsyncStorage.getItem('token');
@@ -75,8 +78,10 @@ export const userService = {
                     throw new Error('User not authenticated');
                 }
                 authHeader = `Bearer ${token}`;
+                console.log('Using JWT token for profile update');
             }
 
+            console.log('Calling PUT /api/settings/profile...');
             const response = await fetch(`${API_URL}/api/settings/profile`, {
                 method: 'PUT',
                 headers: {
@@ -86,17 +91,22 @@ export const userService = {
                 body: JSON.stringify(input),
             });
 
+            console.log('Profile update response status:', response.status);
+
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Profile update error:', errorText);
-                throw new Error('Failed to update profile');
+                console.error('Profile update error response:', errorText);
+                throw new Error(`Failed to update profile: ${errorText}`);
             }
 
             const data = await response.json();
+            console.log('Profile updated successfully, response data:', data);
+            
             // Persist basic fields locally for display
             if (data?.email) await AsyncStorage.setItem('userEmail', data.email);
             if (data?.name) await AsyncStorage.setItem('userName', data.name);
             if (data?.phone) await AsyncStorage.setItem('userPhoneNumber', data.phone);
+            
             return data;
         } catch (error) {
             console.error('Error updating user profile:', error);

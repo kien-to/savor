@@ -11,11 +11,10 @@ import {
   Alert,
 } from "react-native";
 import { reservationService, Reservation } from "../../services/reservations";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { Colors } from "../../constants/Colors";
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { userService } from '../../services/user';
 // import { format } from "date-fns";
 
 const ProfileScreen = () => {
@@ -27,7 +26,7 @@ const ProfileScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPastReservations, setShowPastReservations] = useState(false);
   const router = useRouter();
-  const { logout, token, isGuest, isAuthenticated, userEmail, userName } = useAuth();
+  const { logout, token, isGuest, isAuthenticated, userEmail, userName, refreshUserProfile } = useAuth();
 
   // Debug function to clear all storage
   const clearAllStorage = useCallback(async () => {
@@ -59,33 +58,20 @@ const ProfileScreen = () => {
 
   const fetchReservations = async () => {
     try {
-      console.log('=== PROFILE SCREEN: Fetching reservations ===');
-      console.log('isGuest:', isGuest);
-      console.log('isAuthenticated:', isAuthenticated);
       
       const data = await reservationService.getReservations(isGuest);
       
-      console.log('=== PROFILE SCREEN: Received data ===');
-      console.log('Data type:', typeof data);
-      console.log('Is array:', Array.isArray(data));
-      console.log('Data keys:', data ? Object.keys(data) : 'null');
-      console.log('Full data:', JSON.stringify(data, null, 2));
       
       // Handle new format with currentReservations and pastReservations
       if (data && typeof data === 'object' && 'currentReservations' in data && 'pastReservations' in data) {
         const typedData = data as unknown as { currentReservations: Reservation[]; pastReservations: Reservation[]; currentCount: number; pastCount: number };
-        console.log('=== Using new format with current/past separation ===');
-        console.log('Current count:', typedData.currentReservations?.length);
-        console.log('Past count:', typedData.pastReservations?.length);
         setCurrentReservations(typedData.currentReservations || []);
         setPastReservations(typedData.pastReservations || []);
         // For backward compatibility, also set the combined list
         setReservations([...typedData.currentReservations, ...typedData.pastReservations]);
       } else {
         // Handle old format (array)
-        console.log('=== Using old format (array) ===');
         const reservationsArray = Array.isArray(data) ? data : [];
-        console.log('Array length:', reservationsArray.length);
         setReservations(reservationsArray);
         setCurrentReservations(reservationsArray);
         setPastReservations([]);
@@ -106,31 +92,37 @@ const ProfileScreen = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await fetchReservations();
+      await Promise.all([
+        fetchReservations(),
+        refreshUserProfile(),
+      ]);
     } finally {
       setRefreshing(false);
     }
-  }, []);
-
-  // Fetch user profile information
-  const fetchUserProfile = async () => {
-    if (isAuthenticated && !isGuest) {
-      try {
-        const profile = await userService.getUserProfile();
-        // Update auth context with fresh profile data
-        // This would require adding an updateProfile method to AuthContext
-        console.log('User profile fetched:', profile);
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    }
-  };
+  }, [refreshUserProfile]);
 
   // Initial fetch - refetch when auth state changes
   React.useEffect(() => {
-    fetchReservations();
-    fetchUserProfile();
+    console.log('Profile: Auth state changed - isGuest:', isGuest, 'isAuthenticated:', isAuthenticated);
+    // Small delay to ensure auth tokens are ready
+    const timer = setTimeout(() => {
+      fetchReservations();
+      refreshUserProfile();
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [isGuest, isAuthenticated]);
+
+  // Refetch reservations when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Profile screen focused, fetching reservations...');
+      fetchReservations();
+      return () => {
+        // Cleanup if needed
+      };
+    }, [isGuest, isAuthenticated])
+  );
 
   const handleRemoveReservation = useCallback((reservationId: string, storeName: string) => {
     Alert.alert(
@@ -269,14 +261,13 @@ const ProfileScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.userInfo}>
-          <Image
-            source={{ uri: "https://via.placeholder.com/80" }}
-            style={styles.avatar}
-          />
           <View>
             <Text style={styles.userName}>
               {isGuest ? "Khách" : (userName || userEmail || "Người dùng")}
             </Text>
+            {!isGuest && userEmail && userName !== userEmail && (
+              <Text style={styles.userEmail}>{userEmail}</Text>
+            )}
             {isGuest && (
               <Text style={styles.guestLabel}>Đang duyệt với tư cách khách</Text>
             )}
@@ -414,22 +405,24 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+    flex: 1,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
     color: Colors.light.accent,
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: Colors.light.accent,
+    opacity: 0.85,
+    marginTop: 2,
   },
   guestLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.light.accent,
-    opacity: 0.8,
+    opacity: 0.85,
     marginTop: 2,
   },
   headerButtons: {

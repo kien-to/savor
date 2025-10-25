@@ -12,6 +12,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../constants/Colors';
 import { userService } from '../services/user';
+import { useAuth } from '../context/AuthContext';
 
 interface AccountDetailItem {
   label: string;
@@ -21,6 +22,7 @@ interface AccountDetailItem {
 
 const AccountDetailsScreen = () => {
   const router = useRouter();
+  const { refreshUserProfile } = useAuth();
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
@@ -48,10 +50,17 @@ const AccountDetailsScreen = () => {
       // Save to AsyncStorage for use in PaymentScreen
       if (name) {
         await AsyncStorage.setItem('customerName', name);
+        await AsyncStorage.setItem('userName', name);
       }
       if (phone) {
         await AsyncStorage.setItem('userPhoneNumber', phone);
       }
+      if (email) {
+        await AsyncStorage.setItem('userEmail', email);
+      }
+      
+      // Refresh the AuthContext to update the profile display
+      await refreshUserProfile();
       
       router.back();
     } catch (e: any) {

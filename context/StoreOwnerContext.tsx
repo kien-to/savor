@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { myStoreService, StoreInfo } from '../services/myStore';
+import { useAuth } from './AuthContext';
 
 interface StoreOwnerState {
   isStoreOwnerMode: boolean;
@@ -18,6 +19,7 @@ interface StoreOwnerContextType extends StoreOwnerState {
 const StoreOwnerContext = createContext<StoreOwnerContextType | undefined>(undefined);
 
 export function StoreOwnerProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, userId, isGuest } = useAuth();
   const [state, setState] = useState<StoreOwnerState>({
     isStoreOwnerMode: false,
     hasStore: false,
@@ -50,13 +52,49 @@ export function StoreOwnerProvider({ children }: { children: React.ReactNode }) 
     initializeStoreOwnerState();
   }, []);
 
+  // Listen to authentication changes and re-check store ownership
+  useEffect(() => {
+    const handleAuthChange = async () => {
+      if (!isAuthenticated || isGuest) {
+        // User is not authenticated or is a guest, reset store owner state
+        setState(prev => ({
+          ...prev,
+          hasStore: false,
+          storeInfo: null,
+          isStoreOwnerMode: false,
+        }));
+        await AsyncStorage.removeItem('isStoreOwnerMode');
+      } else {
+        // User is authenticated, check store ownership
+        await checkStoreOwnership();
+      }
+    };
+
+    handleAuthChange();
+  }, [isAuthenticated, userId, isGuest]);
+
   const toggleStoreOwnerMode = async () => {
     const newMode = !state.isStoreOwnerMode;
+    
+    if (newMode) {
+      await checkStoreOwnership();
+    }
+    
     await AsyncStorage.setItem('isStoreOwnerMode', newMode.toString());
     setState(prev => ({ ...prev, isStoreOwnerMode: newMode }));
   };
 
   const checkStoreOwnership = async () => {
+    if (!isAuthenticated || isGuest) {
+      setState(prev => ({
+        ...prev,
+        hasStore: false,
+        storeInfo: null,
+        isLoading: false,
+      }));
+      return;
+    }
+
     try {
       setState(prev => ({ ...prev, isLoading: true }));
       const storeInfo = await myStoreService.getStoreInfo();
@@ -67,27 +105,10 @@ export function StoreOwnerProvider({ children }: { children: React.ReactNode }) 
         isLoading: false,
       }));
     } catch (error) {
-      console.log('User does not have a store or error fetching store info:', error);
-      // For testing, simulate having a store with mock data
-      const mockStoreInfo = {
-        id: '1',
-        title: 'Test Store',
-        type: 'restaurant',
-        address: '123 Test Street',
-        city: 'Test City',
-        state: 'Test State',
-        zip_code: '12345',
-        country: 'Test Country',
-        phone: '+1-555-0123',
-        location: {
-          latitude: 37.7749,
-          longitude: -122.4194,
-        },
-      };
       setState(prev => ({
         ...prev,
-        hasStore: true,
-        storeInfo: mockStoreInfo,
+        hasStore: false,
+        storeInfo: null,
         isLoading: false,
       }));
     }

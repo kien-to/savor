@@ -20,6 +20,7 @@ interface AuthContextType extends AuthState {
   logout: () => Promise<void>;
   continueAsGuest: () => Promise<void>;
   clearAllStorage: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -40,15 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('AuthContext - Initializing auth...');
         const token = await AsyncStorage.getItem('token');
         const userId = await AsyncStorage.getItem('userId');
         const userEmail = await AsyncStorage.getItem('userEmail');
         const userName = await AsyncStorage.getItem('userName');
         const isGuest = await AsyncStorage.getItem('isGuest');
         const guestSetupCompleted = await AsyncStorage.getItem('guestSetupCompleted');
-        console.log('AuthContext - Retrieved from storage - token:', token, 'userId:', userId, 'userEmail:', userEmail, 'userName:', userName, 'isGuest:', isGuest, 'guestSetupCompleted:', guestSetupCompleted);
-        // Seed initial state from storage
+        
         setAuthState({
           token,
           userId,
@@ -58,7 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isGuest: isGuest === 'true',
           guestSetupCompleted: guestSetupCompleted === 'true',
         });
-        console.log('AuthContext - Auth state set, isLoading: false');
 
         // If authenticated, fetch profile from backend and hydrate state
         if (token && userId && isGuest !== 'true') {
@@ -115,7 +113,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       guestSetupCompleted: false 
     });
 
-    // Enrich/Upsert profile with Firebase Google info and persist on backend
+    // First, try to fetch existing profile from database
+    try {
+      const profile = await userService.getUserProfile();
+      const savedEmail = profile.email || null;
+      const savedName = profile.name || profile.display_name || null;
+      const savedPhone = profile.phone || null;
+      
+      if (savedEmail || savedName || savedPhone) {
+        if (savedEmail) await AsyncStorage.setItem('userEmail', savedEmail);
+        if (savedName) await AsyncStorage.setItem('userName', savedName);
+        if (savedPhone) await AsyncStorage.setItem('userPhoneNumber', savedPhone);
+        setAuthState(prev => ({
+          ...prev,
+          userEmail: savedEmail,
+          userName: savedName,
+        }));
+        return;
+      }
+    } catch (e) {
+      // No saved profile found, will try to create from Firebase info
+    }
+
+    // If no saved profile, try to enrich with Firebase info and persist
     try {
       const auth = getAuth(firebase);
       const currentUser = auth.currentUser;
@@ -142,8 +162,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const continueAsGuest = async () => {
-    console.log('AuthContext - Continuing as guest...');
-    
     // Clear all authentication data
     await AsyncStorage.removeItem('token');
     await AsyncStorage.removeItem('userId');
@@ -172,13 +190,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isGuest: true, 
       guestSetupCompleted: false 
     });
-    console.log('AuthContext - Guest mode activated, all previous user data cleared');
   };
 
   const logout = async () => {
-    console.log('AuthContext - Logging out...');
     try {
-      // Sign out of Firebase to avoid cached currentUser from previous sessions
       const auth = getAuth(firebase);
       await signOut(auth);
     } catch (e) {
@@ -191,7 +206,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.removeItem('userEmail');
     await AsyncStorage.removeItem('userName');
     await AsyncStorage.removeItem('isGuest');
-    // Also clear any SecureStore token
     try { await SecureStore.deleteItemAsync('authToken'); } catch {}
     
     // Clear all user-related cached data
@@ -213,11 +227,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isGuest: false, 
       guestSetupCompleted: false 
     });
-    console.log('AuthContext - Logout complete, all auth and cached data cleared');
   };
 
   const clearAllStorage = async () => {
-    console.log('AuthContext - Clearing ALL storage...');
     try {
       await AsyncStorage.clear();
       setAuthState({ 
@@ -229,16 +241,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isGuest: false, 
         guestSetupCompleted: false 
       });
-      console.log('AuthContext - ALL storage cleared successfully');
     } catch (error) {
-      console.error('AuthContext - Error clearing storage:', error);
+      console.error('Error clearing storage:', error);
+    }
+  };
+
+  const refreshUserProfile = async () => {
+    if (!authState.token || !authState.userId || authState.isGuest) {
+      return;
+    }
+
+    try {
+      const profile = await userService.getUserProfile();
+      const updatedEmail = profile.email || authState.userEmail || null;
+      const updatedName = profile.name || profile.display_name || authState.userName || null;
+      
+      if (updatedEmail) await AsyncStorage.setItem('userEmail', updatedEmail);
+      if (updatedName) await AsyncStorage.setItem('userName', updatedName);
+      
+      setAuthState(prev => ({
+        ...prev,
+        userEmail: updatedEmail,
+        userName: updatedName,
+      }));
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
     }
   };
 
   const isAuthenticated = !!(authState.token && authState.userId);
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout, continueAsGuest, clearAllStorage, isAuthenticated }}>
+    <AuthContext.Provider value={{ ...authState, login, logout, continueAsGuest, clearAllStorage, refreshUserProfile, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

@@ -31,7 +31,6 @@ interface StoreData {
   reviews: number;
   address: string;
   itemsLeft: number;
-  bagsAvailable?: number;
   highlights: string[];
   isSaved: boolean;
 }
@@ -147,7 +146,7 @@ const StoreDetailScreen = () => {
 
         <View style={styles.avaContainer}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>Còn {storeData?.bagsAvailable || storeData?.itemsLeft || 0} túi</Text>
+            <Text style={styles.badgeText}>Còn {storeData?.itemsLeft || 0} túi</Text>
           </View>
 
           <Image
@@ -254,7 +253,7 @@ const StoreDetailScreen = () => {
               discountedPrice: storeData?.discountedPrice,
               price: storeData?.price,
               pickUpTime: storeData?.pickUpTime,
-              itemsLeft: storeData?.bagsAvailable || storeData?.itemsLeft,
+              itemsLeft: storeData?.itemsLeft,
               storeImage: storeData?.avatarUrl || storeData?.backgroundUrl,
               storeAddress: storeData?.address,
               storeLatitude: 0, // Add these if available in storeData

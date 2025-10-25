@@ -141,15 +141,10 @@ const StoreOwnerScreen = () => {
       <View style={styles.storeActionButtons}>
         <TouchableOpacity 
           style={styles.createStoreButton} 
-          onPress={() => router.push('/AddBusinessDetailsScreen')}
+          onPress={handleSignUpStore}
         >
           <MaterialIcons name="add-business" size={24} color="#FFF" />
           <Text style={styles.createStoreButtonText}>Tạo cửa hàng mới</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUpStore}>
-          <MaterialIcons name="contact-support" size={24} color="#036B52" />
-          <Text style={styles.signUpButtonText}>Tư vấn & Hỗ trợ</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -470,23 +465,6 @@ const styles = StyleSheet.create({
   },
   createStoreButtonText: {
     color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  signUpButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#036B52',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  signUpButtonText: {
-    color: '#036B52',
     fontSize: 16,
     fontWeight: '600',
   },

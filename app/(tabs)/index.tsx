@@ -27,7 +27,7 @@ interface Store {
   originalPrice?: number;
   discountedPrice?: number;
   isSaved?: boolean;
-  bagsAvailable?: number;
+  itemsLeft?: number;
 }
 
 const HomeScreen = () => {
@@ -216,7 +216,7 @@ const HomeScreen = () => {
         />
         <View style={styles.cardBadges}>
           <View style={styles.quantityBadge}>
-            <Text style={styles.quantityText}>Còn {item.bagsAvailable || 0} túi</Text>
+            <Text style={styles.quantityText}>Còn {item.itemsLeft || 0} túi</Text>
           </View>
         </View>
       </View>

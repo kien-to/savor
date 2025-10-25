@@ -10,7 +10,7 @@ interface AppWrapperProps {
 }
 
 export default function AppWrapper({ children }: AppWrapperProps) {
-  const { isStoreOwnerMode, toggleStoreOwnerMode, hasStore } = useStoreOwner();
+  const { isStoreOwnerMode, toggleStoreOwnerMode, hasStore, isLoading: isStoreLoading } = useStoreOwner();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'reservations' | 'settings'>('reservations');
   const [currentReservations, setCurrentReservations] = useState<StoreOwnerReservation[]>([]);
@@ -68,6 +68,20 @@ export default function AppWrapper({ children }: AppWrapperProps) {
   >(null);
 
   console.log('AppWrapper - isStoreOwnerMode:', isStoreOwnerMode, 'hasStore:', hasStore);
+
+  // Redirect to signup if trying to access store owner mode without a store
+  useEffect(() => {
+    if (isStoreOwnerMode && !isStoreLoading && !hasStore) {
+      console.log('User tried to access store owner mode without a store, redirecting to signup');
+      // Turn off store owner mode first
+      toggleStoreOwnerMode();
+      
+      // Then navigate after a small delay
+      setTimeout(() => {
+        router.push('/SignUpStoreScreen');
+      }, 100);
+    }
+  }, [isStoreOwnerMode, hasStore, isStoreLoading]);
 
   // Load data when store owner mode is enabled
   useEffect(() => {
