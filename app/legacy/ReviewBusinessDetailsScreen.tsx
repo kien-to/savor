@@ -12,7 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
-import { myStoreService } from '../services/myStore';
+import { myStoreService } from '../../services/myStore';
 
 const ReviewBusinessDetailsScreen = () => {
   const router = useRouter();

@@ -130,8 +130,6 @@ const LocationPickerScreen = () => {
           pinColor="red"
         />
         {stores.map((store) => {
-          console.log("id", store.id);
-          console.log("imageUrl", store.imageUrl);
           return (
             <Marker
               key={store.id}

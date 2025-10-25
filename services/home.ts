@@ -39,12 +39,10 @@ export const homeService = {
 
       if (!response.ok) {
         const error = await response.json();
-        console.log('API error:', error);
         throw new Error(error.error || 'Failed to fetch home data');
       }
 
       const data = await response.json();
-      console.log('API response data:', data);
       return data;
     } catch (error) {
       console.error('API error:', error);

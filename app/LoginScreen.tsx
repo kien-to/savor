@@ -30,7 +30,6 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const { idToken } = response.authentication;
-      console.log('Google ID Token:', idToken);
       if (!idToken) throw new Error('No ID token found');
       const result = await socialAuthService.handleGoogleLogin(idToken);
       await login(result.token, result.user_id);

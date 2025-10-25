@@ -49,8 +49,6 @@ const StoreDetailScreen = () => {
         setLoading(true);
         setError(null);
 
-        console.log("StoreScreen - storeId received:", storeId);
-        console.log("StoreScreen - storeId type:", typeof storeId);
         
         if (!storeId) {
           throw new Error('No store ID provided');

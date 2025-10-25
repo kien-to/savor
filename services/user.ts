@@ -31,7 +31,6 @@ export const userService = {
                 authHeader = `Bearer ${token}`;
             }
 
-            console.log('Fetching user profile with auth header:', authHeader.substring(0, 20) + '...');
 
             const response = await fetch(`${API_URL}/api/settings/profile`, {
                 method: 'GET',
@@ -41,7 +40,6 @@ export const userService = {
                 },
             });
 
-            console.log('Profile response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -50,7 +48,6 @@ export const userService = {
             }
 
             const data = await response.json();
-            console.log('User profile data:', data);
             
             return data;
         } catch (error) {
@@ -61,7 +58,6 @@ export const userService = {
 
     async updateUserProfile(input: { name?: string; phone?: string; email?: string }): Promise<UserProfile> {
         try {
-            console.log('userService.updateUserProfile called with:', input);
             
             // Try Firebase auth first (for social login users)
             const currentUser = getAuth(firebase).currentUser;
@@ -70,7 +66,6 @@ export const userService = {
             if (currentUser) {
                 const idToken = await currentUser.getIdToken(true); // Force refresh token
                 authHeader = `Bearer ${idToken}`;
-                console.log('Using Firebase auth for profile update');
             } else {
                 // Try JWT token auth (for email login users)
                 const token = await AsyncStorage.getItem('token');
@@ -78,10 +73,8 @@ export const userService = {
                     throw new Error('User not authenticated');
                 }
                 authHeader = `Bearer ${token}`;
-                console.log('Using JWT token for profile update');
             }
 
-            console.log('Calling PUT /api/settings/profile...');
             const response = await fetch(`${API_URL}/api/settings/profile`, {
                 method: 'PUT',
                 headers: {
@@ -91,7 +84,6 @@ export const userService = {
                 body: JSON.stringify(input),
             });
 
-            console.log('Profile update response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -100,7 +92,6 @@ export const userService = {
             }
 
             const data = await response.json();
-            console.log('Profile updated successfully, response data:', data);
             
             // Persist basic fields locally for display
             if (data?.email) await AsyncStorage.setItem('userEmail', data.email);
@@ -136,7 +127,6 @@ export const userService = {
                 try {
                     return await this.getUserProfile();
                 } catch (error) {
-                    console.log('Failed to fetch profile from server, using stored info');
                     // Fall back to stored user info
                     const email = await AsyncStorage.getItem('userEmail');
                     const name = await AsyncStorage.getItem('userName');

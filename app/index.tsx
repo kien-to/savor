@@ -9,20 +9,16 @@ export default function Index() {
   const { token, isLoading, isGuest, isAuthenticated, guestSetupCompleted } = useAuth();
   
   useEffect(() => {
-    console.log('Index - token:', token, 'isLoading:', isLoading, 'isGuest:', isGuest, 'isAuthenticated:', isAuthenticated, 'guestSetupCompleted:', guestSetupCompleted);
     if (!isLoading) {
       // Add a small delay to ensure state is properly updated
       setTimeout(() => {
         if (isAuthenticated) {
-          console.log('Index - User is authenticated, navigating to tabs');
           // User is authenticated, go to tabs
           router.replace('/(tabs)');
         } else if (isGuest) {
-          console.log('Index - Guest user, navigating to tabs');
           // Guest user, go directly to tabs (setup will be prompted during first reservation)
           router.replace('/(tabs)');
         } else {
-          console.log('Index - User is NOT authenticated and not guest, navigating to login');
           // User is not authenticated and not in guest mode, go to login
           router.replace('/LoginScreen');
         }

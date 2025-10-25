@@ -67,12 +67,10 @@ export default function AppWrapper({ children }: AppWrapperProps) {
     | null
   >(null);
 
-  console.log('AppWrapper - isStoreOwnerMode:', isStoreOwnerMode, 'hasStore:', hasStore);
 
   // Redirect to signup if trying to access store owner mode without a store
   useEffect(() => {
     if (isStoreOwnerMode && !isStoreLoading && !hasStore) {
-      console.log('User tried to access store owner mode without a store, redirecting to signup');
       // Turn off store owner mode first
       toggleStoreOwnerMode();
       
@@ -132,9 +130,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
 
   const handleMarkAsPickedUp = async (reservationId: string, customerName: string) => {
     try {
-      console.log('Marking reservation as picked up:', reservationId);
       const response = await storeOwnerApiService.updateReservationStatus(reservationId, 'picked_up');
-      console.log('Update response:', response);
       
       // Update both current and past reservations
       setCurrentReservations(prev => 
@@ -164,7 +160,6 @@ export default function AppWrapper({ children }: AppWrapperProps) {
   };
 
   const handleRefresh = async () => {
-    console.log('Refreshing reservations...');
     setIsRefreshing(true);
     
     try {
@@ -242,7 +237,6 @@ export default function AppWrapper({ children }: AppWrapperProps) {
 
   // If navigating, suppress overlay render to prevent flash
   if (isStoreOwnerMode && hasStore && !isNavigating) {
-    console.log('Rendering store owner interface');
     return (
       <View style={styles.storeOwnerContainer} pointerEvents="auto">
         {/* Store Owner Header */}
@@ -251,7 +245,6 @@ export default function AppWrapper({ children }: AppWrapperProps) {
           <TouchableOpacity
             style={styles.exitButton}
             onPress={() => {
-              console.log('Exit button pressed');
               toggleStoreOwnerMode();
             }}
           >
@@ -565,7 +558,6 @@ export default function AppWrapper({ children }: AppWrapperProps) {
           <TouchableOpacity
             style={[styles.storeOwnerTab, activeTab === 'reservations' && styles.activeStoreOwnerTab]}
             onPress={() => {
-              console.log('Reservations tab pressed');
               setActiveTab('reservations');
             }}
           >
@@ -581,7 +573,6 @@ export default function AppWrapper({ children }: AppWrapperProps) {
           <TouchableOpacity
             style={[styles.storeOwnerTab, activeTab === 'settings' && styles.activeStoreOwnerTab]}
             onPress={() => {
-              console.log('Settings tab pressed');
               setActiveTab('settings');
             }}
           >
@@ -600,7 +591,6 @@ export default function AppWrapper({ children }: AppWrapperProps) {
   }
 
   // Normal customer interface
-  console.log('Rendering normal customer interface');
   return <>{children}</>;
 }
 

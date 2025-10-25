@@ -282,7 +282,6 @@ export const reservationService = {
             }
 
             const data = await response.json();
-            console.log('Guest reservation created:', data);
             
             // Also save locally as backup
             await this.saveLocalGuestReservation(data);
@@ -345,8 +344,6 @@ export const reservationService = {
                 body: JSON.stringify(reservationData),
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response headers:', response.headers);
 
             if (!response.ok) {
                 // Try to get error text first
@@ -367,7 +364,6 @@ export const reservationService = {
 
             // Try to parse response as JSON
             const responseText = await response.text();
-            console.log('Raw response text:', responseText);
             
             let data;
             try {
@@ -378,7 +374,6 @@ export const reservationService = {
                 throw new Error('Invalid response format from server');
             }
             
-            console.log('Authenticated reservation created:', data);
             return data;
         } catch (error) {
             console.error('Error creating authenticated reservation:', error);

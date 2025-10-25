@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { myStoreService, StoreInfo } from '../services/myStore';
+import { myStoreService, StoreInfo } from '../../services/myStore';
 
 const Settings = () => {
   const router = useRouter();

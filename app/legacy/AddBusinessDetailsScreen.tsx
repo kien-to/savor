@@ -12,7 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { geocodingService } from '../services/geocoding';
+import { geocodingService } from '../../services/geocoding';
 
 interface PlaceSuggestion {
   description: string;
@@ -154,16 +154,6 @@ const AddBusinessDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      {/* <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sign up your store</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="close" size={24} color="#000" />
-        </TouchableOpacity>
-      </View> */}
 
       <ScrollView 
         style={styles.content}
@@ -319,18 +309,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   content: {
     flex: 1,

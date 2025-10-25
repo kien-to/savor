@@ -35,15 +35,12 @@ export const myStoreService = {
   async getAuthTokenWithRetry(maxRetries: number = 3, delayMs: number = 500): Promise<string | null> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`MyStore Auth attempt ${attempt}/${maxRetries}`);
         
         // Try Firebase auth first (for social login users)
         const auth = getAuth(firebase);
         const user = auth.currentUser;
         if (user) {
-          console.log('Firebase user found, getting ID token...');
           const idToken = await user.getIdToken();
-          console.log('Firebase ID token obtained successfully');
           return idToken;
         }
         
@@ -51,15 +48,12 @@ export const myStoreService = {
         const AsyncStorage = require('@react-native-async-storage/async-storage').default;
         const token = await AsyncStorage.getItem('token');
         if (token) {
-          console.log('JWT token found in storage');
           return token;
         }
         
-        console.log(`No auth token found on attempt ${attempt}`);
         
         // If this isn't the last attempt, wait before retrying
         if (attempt < maxRetries) {
-          console.log(`Waiting ${delayMs}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
       } catch (error) {
@@ -70,7 +64,6 @@ export const myStoreService = {
       }
     }
     
-    console.log('All myStore auth attempts failed');
     return null;
   },
 
@@ -95,7 +88,6 @@ export const myStoreService = {
 
     //   console.log("my store response", response);
       const data = await response.json();
-      console.log("my store data", data);
       return data;
     } catch (error) {
       console.error('Error fetching store info:', error);

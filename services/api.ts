@@ -5,7 +5,6 @@ import firebase from '../config/firebase';
 export const getStore = async (storeId: string) => {
   try {
     // storeId = "rc002"
-    console.log(`Fetching store with ID: ${storeId} from ${API_URL}/api/stores/${storeId}`);
     
     // Try to get store details without authentication first (public info)
     let response = await fetch(`${API_URL}/api/stores/${storeId}`, {

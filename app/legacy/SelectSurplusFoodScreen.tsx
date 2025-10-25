@@ -7,7 +7,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
 
 const categories = [
   { id: 'meals', label: 'Meals' },
@@ -31,12 +30,6 @@ const SelectSurplusFoodScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* <TouchableOpacity 
-        style={styles.closeButton}
-        onPress={() => router.back()}
-      >
-        <MaterialIcons name="close" size={24} color="#000" />
-      </TouchableOpacity> */}
 
       <ScrollView style={styles.content}>
         <Text style={styles.title}>
@@ -87,12 +80,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFF',
     paddingTop: 60,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 1,
   },
   content: {
     flex: 1,

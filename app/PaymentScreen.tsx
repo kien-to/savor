@@ -130,11 +130,8 @@ const PaymentScreen = () => {
       await AsyncStorage.setItem('userPhoneNumber', phoneNumber);
       await AsyncStorage.setItem('customerName', customerName);
       
-      console.log("Processing payment with phone number:", phoneNumber);
-      console.log("pickUpTime", pickUpTime);
 
       if (isGuest) {
-        console.log("Creating guest reservation");
         // Create guest reservation
         const guestReservationData = {
           storeId: storeId.toString(),
@@ -167,7 +164,6 @@ const PaymentScreen = () => {
           ]
         );
       } else {
-        console.log("Creating authenticated reservation");
         // Persist latest contact info to backend profile so user isn't re-prompted
         try {
           await userService.updateUserProfile({

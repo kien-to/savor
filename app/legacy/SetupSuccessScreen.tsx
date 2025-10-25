@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { storeManagementService } from '../services/storeManagement';
+import { storeManagementService } from '../../services/storeManagement';
 
 const SetupSuccessScreen = () => {
   const router = useRouter();

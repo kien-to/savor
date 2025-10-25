@@ -45,7 +45,6 @@ const ProfileScreen = () => {
             try {
               const AsyncStorage = require('@react-native-async-storage/async-storage').default;
               await AsyncStorage.clear();
-              console.log('All AsyncStorage cleared');
               Alert.alert('Success', 'All storage cleared. Restart the app to test.');
             } catch (error) {
               console.error('Error clearing storage:', error);
@@ -103,7 +102,6 @@ const ProfileScreen = () => {
 
   // Initial fetch - refetch when auth state changes
   React.useEffect(() => {
-    console.log('Profile: Auth state changed - isGuest:', isGuest, 'isAuthenticated:', isAuthenticated);
     // Small delay to ensure auth tokens are ready
     const timer = setTimeout(() => {
       fetchReservations();
@@ -116,7 +114,6 @@ const ProfileScreen = () => {
   // Refetch reservations when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      console.log('Profile screen focused, fetching reservations...');
       fetchReservations();
       return () => {
         // Cleanup if needed
