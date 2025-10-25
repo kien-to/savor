@@ -1,13 +1,7 @@
 {
-	"folders": [
-		{
-			"name": "savor-revamped",
-			"path": "../.."
-		},
-		{
-			"name": "Navigator (1)",
-			"path": "../../../../Navigator (1)"
-		}
-	],
-	"settings": {}
+    "folders": [
+        {
+            "path": "../.."
+        }
+    ]
 }
