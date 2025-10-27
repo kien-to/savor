@@ -110,6 +110,13 @@ export default function LoginScreen() {
       >
         <Text style={styles.buttonText}>Tiếp tục không đăng nhập</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.privacyLink}
+        onPress={() => router.push('/PrivacyPolicyScreen')}
+      >
+        <Text style={styles.privacyText}>Chính sách bảo mật / Privacy Policy</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -170,5 +177,15 @@ const styles = StyleSheet.create({
   },
   guestButton: {
     backgroundColor: "#6B7280", // Gray color for guest option
+  },
+  privacyLink: {
+    marginTop: 20,
+    paddingVertical: 8,
+  },
+  privacyText: {
+    color: Colors.light.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
 });

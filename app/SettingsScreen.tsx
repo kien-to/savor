@@ -86,6 +86,13 @@ const SettingsScreen = () => {
           'Liên hệ',
           handleContact
         )}
+        {renderSettingsItem(
+          <MaterialIcons name="privacy-tip" size={24} color="#000" />,
+          'Chính sách bảo mật',
+          () => {
+            router.push('/PrivacyPolicyScreen');
+          }
+        )}
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

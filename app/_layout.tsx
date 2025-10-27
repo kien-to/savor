@@ -156,6 +156,18 @@ export default function RootLayout() {
                        headerShown: false,
                      }}
                    />
+                   <Stack.Screen
+                     name="PrivacyPolicyScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
+                   <Stack.Screen
+                     name="TermsOfServiceScreen"
+                     options={{
+                       headerShown: false,
+                     }}
+                   />
             </Stack>
             <StatusBar style="auto" />
           </AppWrapper>

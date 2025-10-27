@@ -159,13 +159,19 @@ const ContactScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pháp lý</Text>
           
-          <TouchableOpacity style={styles.linkItem}>
+          <TouchableOpacity 
+            style={styles.linkItem}
+            onPress={() => router.push('/TermsOfServiceScreen')}
+          >
             <MaterialIcons name="description" size={20} color="#036B52" />
             <Text style={styles.linkText}>Điều khoản dịch vụ</Text>
             <MaterialIcons name="chevron-right" size={20} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.linkItem}>
+          <TouchableOpacity 
+            style={styles.linkItem}
+            onPress={() => router.push('/PrivacyPolicyScreen')}
+          >
             <MaterialIcons name="privacy-tip" size={20} color="#036B52" />
             <Text style={styles.linkText}>Chính sách bảo mật</Text>
             <MaterialIcons name="chevron-right" size={20} color="#666" />
