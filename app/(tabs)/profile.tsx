@@ -271,20 +271,6 @@ const ProfileScreen = () => {
           </View>
         </View>
         <View style={styles.headerButtons}>
-          {(isAuthenticated || isGuest) && (
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <MaterialIcons name="logout" size={20} color={Colors.light.accent} />
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity 
-            style={styles.clearStorageButton}
-            onPress={clearAllStorage}
-          >
-            <Text style={styles.clearStorageText}>🗑️</Text>
-          </TouchableOpacity>
           <TouchableOpacity 
             style={styles.settingsButton}
             onPress={() => router.push('/SettingsScreen')}

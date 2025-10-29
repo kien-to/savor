@@ -75,7 +75,7 @@ export default function LoginScreen() {
       <Text style={styles.headerText}>Chung tay cứu lấy đồ ăn</Text>
 
       <Image
-        source={{ uri: "https://example.com/image.png" }}
+        source={{ uri: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop" }}
         style={styles.image}
       />
 

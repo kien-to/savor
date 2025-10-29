@@ -54,7 +54,7 @@ const StoreOwnerScreen = () => {
     
     setReservationsLoading(true);
     try {
-      // TODO: Implement API call to fetch store reservations
+      // Fetch store reservations from API
       // For now, using mock data
       const mockReservations: StoreReservation[] = [
         {

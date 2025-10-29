@@ -245,7 +245,14 @@ export default function AppWrapper({ children }: AppWrapperProps) {
           <TouchableOpacity
             style={styles.exitButton}
             onPress={() => {
-              toggleStoreOwnerMode();
+              Alert.alert(
+                'Tắt chế độ chủ cửa hàng',
+                'Bạn có muốn quay lại chế độ khách không?',
+                [
+                  { text: 'Hủy', style: 'cancel' },
+                  { text: 'Đồng ý', style: 'destructive', onPress: () => toggleStoreOwnerMode() },
+                ]
+              );
             }}
           >
             <MaterialIcons name="close" size={24} color="#FFF" />

@@ -1,20 +1,22 @@
 {
   "expo": {
-    "name": "savor",
-    "slug": "savor",
+    "name": "Savor - Food Waste Reduction",
+    "slug": "savor-food-waste",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "savor",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "description": "Join Savor in the fight against food waste! Discover nearby restaurants offering surplus food at discounted prices. Save money while helping the environment.",
     "ios": {
-      "scheme": "com.googleusercontent.apps.956015678432-mcgun19fkpv3jk3pu10lbhe40oqgvt7d",
-      "bundleIdentifier": "com.savor.app",
-      "supportsTablet": true
+      "bundleIdentifier": "com.savor.foodwaste",
+      "supportsTablet": true,
+      "buildNumber": "1"
     },
     "android": {
-      "package": "com.savor.app",
+      "package": "com.savor.foodwaste",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -45,6 +47,11 @@
     "facebookAppId": "1224771151917446",
     "facebookDisplayName": "Savor",
     "facebookAutoLogAppEventsEnabled": false,
-    "facebookAdvertiserIDCollectionEnabled": false
+    "facebookAdvertiserIDCollectionEnabled": false,
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
   }
 }
